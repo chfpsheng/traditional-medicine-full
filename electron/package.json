@@ -1,0 +1,25 @@
+{
+  "name": "traditional-medicine-electron",
+  "version": "1.0.0",
+  "description": "传统医学应用Electron桌面端",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
+    "axios": "^1.6.2",
+    "element-plus": "^2.4.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "electron": "^27.0.3",
+    "electron-builder": "^24.6.4",
+    "vite": "^5.0.0",
+    "vite-plugin-electron": "^0.15.0",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  }
+}
