@@ -14,7 +14,17 @@
     "dev:electron": "npm run dev --workspace=electron",
     "install:all": "npm install && npm install --workspace=server && npm install --workspace=electron"
   },
-  "keywords": ["electron", "traditional-medicine", "api"],
+  "keywords": [
+    "electron",
+    "traditional-medicine",
+    "api"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "electron": "^27.0.3",
+    "vite-plugin-electron": "^0.15.0",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  }
 }
