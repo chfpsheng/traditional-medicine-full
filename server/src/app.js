@@ -136,6 +136,7 @@ const initData = async () => {
           clinicName: '中医诊所',
           address: '北京市朝阳区建国路88号',
           specialize: '内科、妇科',
+          introduction: '从事中医临床工作20余年，擅长内科常见病、妇科调理等',
           lng: 116.4668,
           lat: 39.9219
         },
@@ -144,6 +145,7 @@ const initData = async () => {
           clinicName: '祖传中医',
           address: '上海市浦东新区陆家嘴环路1000号',
           specialize: '外科、儿科',
+          introduction: '祖传中医世家，擅长外科创伤、儿科常见病治疗',
           lng: 121.5063,
           lat: 31.2451
         },
@@ -152,12 +154,20 @@ const initData = async () => {
           clinicName: '中医药馆',
           address: '广州市天河区天河路385号',
           specialize: '内科、针灸',
+          introduction: '擅长针灸治疗各种慢性疾病，尤其是脾胃调理',
           lng: 113.3246,
           lat: 23.1291
         }
       ];
       await Doctor.insertMany(doctors);
       console.log('初始医生数据已创建');
+    } else {
+      // 为已有医生数据添加introduction字段
+      await Doctor.updateMany(
+        { introduction: { $exists: false } },
+        { $set: { introduction: '' } }
+      );
+      console.log('已为所有医生数据添加简介字段');
     }
   } catch (error) {
     console.error('初始化数据失败:', error);
@@ -232,7 +242,7 @@ app.get('/api/doctors', async (req, res) => {
 // 添加医生
 app.post('/api/doctors', async (req, res) => {
   try {
-    const { name, clinicName, address, specialize, lng, lat } = req.body;
+    const { name, clinicName, address, specialize, introduction = '', lng, lat } = req.body;
     
     // 创建医生实例
     const newDoctor = new Doctor({
@@ -240,6 +250,7 @@ app.post('/api/doctors', async (req, res) => {
       clinicName,
       address,
       specialize,
+      introduction,
       lng,
       lat
     });
@@ -257,12 +268,12 @@ app.post('/api/doctors', async (req, res) => {
 app.put('/api/doctors/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, clinicName, address, specialize, lng, lat } = req.body;
+    const { name, clinicName, address, specialize, introduction = '', lng, lat } = req.body;
     
     // 查找并更新医生数据
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { name, clinicName, address, specialize, lng, lat },
+      { name, clinicName, address, specialize, introduction, lng, lat },
       { new: true, runValidators: true }
     );
     

@@ -31,6 +31,7 @@
                     <el-descriptions-item label="诊所名称">{{ selectedDoctor.clinicName }}</el-descriptions-item>
                     <el-descriptions-item label="地址">{{ selectedDoctor.address }}</el-descriptions-item>
                     <el-descriptions-item label="擅长">{{ selectedDoctor.specialize }}</el-descriptions-item>
+                    <el-descriptions-item label="简介">{{ selectedDoctor.introduction || '暂无简介' }}</el-descriptions-item>
                   </el-descriptions>
                 </div>
               </div>
@@ -80,6 +81,16 @@
       <el-form-item label="擅长" required>
         <el-input v-model="form.specialize" placeholder="请输入医生擅长领域"></el-input>
       </el-form-item>
+      <el-form-item label="简介">
+        <el-input 
+          v-model="form.introduction" 
+          placeholder="请输入医生简介" 
+          type="textarea" 
+          :rows="3" 
+          :maxlength="256" 
+          show-word-limit
+        ></el-input>
+      </el-form-item>
       <el-form-item label="经度" required>
         <el-input v-model="form.lng" type="number" placeholder="请输入经度"></el-input>
       </el-form-item>
@@ -124,6 +135,7 @@ export default {
         clinicName: '',
         address: '',
         specialize: '',
+        introduction: '',
         lng: 0,
         lat: 0
       },
@@ -166,6 +178,7 @@ export default {
             <h4>${doctor.name}</h4>
             <p>${doctor.clinicName}</p>
             <p>${doctor.address}</p>
+            ${doctor.introduction ? `<p>${doctor.introduction}</p>` : ''}
           </div>
         `)
         this.infoWindow.open(this.mapInstance, point)
@@ -285,6 +298,7 @@ export default {
         clinicName: '',
         address: '',
         specialize: '',
+        introduction: '',
         lng: 116.404,
         lat: 39.915
       }
@@ -302,6 +316,7 @@ export default {
         clinicName: row.clinicName,
         address: row.address,
         specialize: row.specialize,
+        introduction: row.introduction || '',
         lng: row.lng,
         lat: row.lat
       }
