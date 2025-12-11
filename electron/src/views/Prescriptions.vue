@@ -1,19 +1,7 @@
 <template>
   <div class="prescriptions-container">
-    <!-- 顶部导航栏 -->
-    <div class="header">
-      <div class="logo">
-        <el-icon><Reading /></el-icon>
-        <span>中医验方宝典</span>
-      </div>
-      <div class="nav-buttons">
-        <el-button type="primary">验方集</el-button>
-        <el-button type="primary" plain>诊断集</el-button>
-      </div>
-      <div class="user-info">
-        <el-icon><User /></el-icon>
-      </div>
-    </div>
+    <!-- 公共顶部导航栏 -->
+    <Header />
     
     <!-- 主要内容区域 -->
     <div class="main-content">
@@ -99,7 +87,8 @@
 
 <script>
 import request from '../utils/request'
-import { Edit, Delete, Plus, Reading, User, Search, Refresh } from '@element-plus/icons-vue'
+import { Edit, Delete, Plus, User, Search, Refresh } from '@element-plus/icons-vue'
+import Header from '../components/Header.vue'
 
 export default {
   name: 'Prescriptions',
@@ -107,10 +96,10 @@ export default {
     Edit,
     Delete,
     Plus,
-    Reading,
     User,
     Search,
-    Refresh
+    Refresh,
+    Header
   },
   data() {
     return {
@@ -353,39 +342,7 @@ export default {
   background-color: #f5f7fa;
 }
 
-/* 顶部导航栏 */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  height: 60px;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #409EFF;
-}
-
-.logo .el-icon {
-  font-size: 24px;
-}
-
-.nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.user-info .el-icon {
-  font-size: 20px;
-  color: #606266;
-}
 
 /* 主要内容区域 */
 .main-content {
