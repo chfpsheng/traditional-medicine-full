@@ -13,6 +13,38 @@
           node-key="id"
           :expand-on-click-node="false"
         >
+          <template #default="{ node, data }">
+            <span class="tree-node-label" @click="toggleOperations(node, data)">
+              {{ data.label }}
+            </span>
+            <span class="tree-node-operations">
+              <el-button
+                v-if="node.level < 2"
+                type="text"
+                size="small"
+                @click.stop="handleAddChild(data, node)"
+                title="添加子分类"
+              >
+                <el-icon><Plus /></el-icon>
+              </el-button>
+              <el-button
+                type="text"
+                size="small"
+                @click.stop="handleEdit(data, node)"
+                title="编辑分类"
+              >
+                <el-icon><Edit /></el-icon>
+              </el-button>
+              <el-button
+                type="text"
+                size="small"
+                @click.stop="handleDelete(data, node)"
+                title="删除分类"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </span>
+          </template>
         </el-tree>
       </div>
       
@@ -124,7 +156,8 @@ export default {
       isAdd: false,
       selectedNode: null,
       selectedNodeData: null,
-      currentNodeKey: null
+      currentNodeKey: null,
+      currentOperationsNode: null
     }
   },
   created() {
@@ -169,6 +202,15 @@ export default {
         // 获取父节点的label作为一级分类
         this.currentCategory = node.parent.data.label
         this.filterPrescriptions()
+      }
+    },
+    
+    toggleOperations(node, data) {
+      // 点击节点时切换操作图标显示状态
+      if (this.currentOperationsNode === node) {
+        this.currentOperationsNode = null
+      } else {
+        this.currentOperationsNode = node
       }
     },
     
@@ -365,10 +407,15 @@ export default {
 /* 树节点样式 */
 :deep(.el-tree) {
   background-color: transparent;
+  width: 100%;
 }
 
 :deep(.el-tree-node__content) {
   padding: 6px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 :deep(.el-tree-node__label) {
@@ -383,6 +430,59 @@ export default {
 
 :deep(.el-tree-node.is-current > .el-tree-node__content .el-tree-node__label) {
   color: #409EFF;
+}
+
+/* 自定义节点样式 */
+.tree-node-label {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.tree-node-label:hover {
+  background-color: #f0f0f0;
+}
+
+/* 操作图标样式 */
+.tree-node-operations {
+  display: none;
+  gap: 1px;
+  margin-left: auto;
+  padding-left: 5px;
+}
+
+:deep(.el-tree-node__content:hover) .tree-node-operations {
+  display: flex;
+}
+
+:deep(.tree-node-operations .el-button) {
+  padding: 2px 3px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1;
+  min-width: auto;
+  height: auto;
+}
+
+:deep(.tree-node-operations .el-icon) {
+  font-size: 13px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 移除按钮默认边框和背景 */
+:deep(.tree-node-operations .el-button--text) {
+  border: none;
+  background: transparent;
+  color: #606266;
+}
+
+:deep(.tree-node-operations .el-button--text:hover) {
+  color: #409EFF;
+  background: transparent;
+  border: none;
 }
 
 /* 右侧内容区 */
