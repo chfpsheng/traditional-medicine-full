@@ -11,14 +11,79 @@
     
     <div class="content-wrapper">
       <div class="tree-container">
-        <h3>病症分类</h3>
+        <div class="tree-header">
+          <h3>病症分类</h3>
+          <div class="tree-actions">
+            <el-tooltip content="添加分类" placement="top">
+              <el-button type="primary" size="small" @click="handleAddRoot">
+                <el-icon><Plus /></el-icon>
+              </el-button>
+            </el-tooltip>
+          </div>
+        </div>
         <el-tree
           ref="tree"
           :data="categories"
           :props="defaultProps"
           @node-click="handleNodeClick"
           :default-expanded-keys="['内科', '外科', '妇科', '儿科']"
-        ></el-tree>
+          :highlight-current="true"
+          current-node-key="currentNodeKey"
+        >
+          <template #default="{ node, data }">
+            <span class="custom-tree-node">
+              <span>{{ data.label }}</span>
+              <span v-if="data.label === currentNodeKey">
+                <el-tooltip content="添加子节点" placement="top">
+                  <el-button
+                    type="text"
+                    size="small"
+                    @click.stop="() => handleAddChild(data, node)"
+                  >
+                    <el-icon><Plus /></el-icon>
+                  </el-button>
+                </el-tooltip>
+                <el-tooltip content="编辑节点" placement="top">
+                  <el-button
+                    type="text"
+                    size="small"
+                    @click.stop="() => handleEdit(data, node)"
+                  >
+                    <el-icon><Edit /></el-icon>
+                  </el-button>
+                </el-tooltip>
+                <el-tooltip content="删除节点" placement="top">
+                  <el-button
+                    type="text"
+                    size="small"
+                    @click.stop="() => handleDelete(data, node)"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </el-tooltip>
+              </span>
+            </span>
+          </template>
+        </el-tree>
+
+        <!-- 添加/编辑对话框 -->
+        <el-dialog
+          v-model="dialogVisible"
+          :title="dialogTitle"
+          width="30%"
+        >
+          <el-form :model="form" label-width="80px">
+            <el-form-item label="分类名称">
+              <el-input v-model="form.label" placeholder="请输入分类名称"></el-input>
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <span class="dialog-footer">
+              <el-button @click="dialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
+            </span>
+          </template>
+        </el-dialog>
       </div>
       
       <div class="table-container">
@@ -38,9 +103,15 @@
 
 <script>
 import request from '../utils/request'
+import { Edit, Delete, Plus } from '@element-plus/icons-vue'
 
 export default {
   name: 'Prescriptions',
+  components: {
+    Edit,
+    Delete,
+    Plus
+  },
   data() {
     return {
       categories: [],
@@ -54,7 +125,18 @@ export default {
       defaultProps: {
         children: 'children',
         label: 'label'
-      }
+      },
+      dialogVisible: false,
+      dialogTitle: '',
+      form: {
+        label: ''
+      },
+      currentNode: null,
+      currentData: null,
+      isAdd: false,
+      selectedNode: null,
+      selectedNodeData: null,
+      currentNodeKey: null
     }
   },
   created() {
@@ -82,6 +164,12 @@ export default {
     },
     
     handleNodeClick(data, node) {
+      // 更新选中节点信息
+      this.selectedNode = node
+      this.selectedNodeData = data
+      this.currentNodeKey = data.label
+
+      // 筛选方子
       if (node.level === 1) {
         // 点击的是一级分类（如内科、外科）
         this.currentCategory = data.label
@@ -107,6 +195,7 @@ export default {
       this.prescriptions = this.allPrescriptions
       // 重置树形结构选中状态
       this.$refs.tree.setCurrentKey(null)
+      this.currentNodeKey = null
     },
     
     filterPrescriptions() {
@@ -128,6 +217,101 @@ export default {
       }
       
       this.prescriptions = filtered
+    },
+
+    // 添加根分类
+    handleAddRoot() {
+      this.dialogTitle = '添加分类'
+      this.form = { label: '' }
+      this.currentNode = null
+      this.currentData = null
+      this.isAdd = true
+      this.dialogVisible = true
+    },
+
+    // 添加子分类
+    handleAddChild(data, node) {
+      this.dialogTitle = '添加子分类'
+      this.form = { label: '' }
+      this.currentNode = node
+      this.currentData = data
+      this.isAdd = true
+      this.dialogVisible = true
+    },
+
+    // 编辑分类
+    handleEdit(data, node) {
+      this.dialogTitle = '编辑分类'
+      this.form = { label: data.label }
+      this.currentNode = node
+      this.currentData = data
+      this.isAdd = false
+      this.dialogVisible = true
+    },
+
+    // 删除分类
+    handleDelete(data, node) {
+      this.$confirm('确定要删除该分类吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        if (node.level === 1) {
+          // 删除一级分类
+          const index = this.categories.findIndex(item => item.label === data.label)
+          if (index > -1) {
+            this.categories.splice(index, 1)
+          }
+        } else {
+          // 删除二级分类
+          const parent = node.parent.data
+          if (parent && parent.children) {
+            const index = parent.children.findIndex(item => item.label === data.label)
+            if (index > -1) {
+              parent.children.splice(index, 1)
+            }
+          }
+        }
+        this.$message.success('删除成功')
+        // 重置选中状态
+        this.currentNodeKey = null
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
+    },
+
+    // 对话框确定按钮
+    handleDialogConfirm() {
+      if (!this.form.label.trim()) {
+        this.$message.error('请输入分类名称')
+        return
+      }
+
+      if (this.isAdd) {
+        // 添加操作
+        if (!this.currentNode) {
+          // 添加根分类
+          this.categories.push({
+            label: this.form.label,
+            children: []
+          })
+        } else {
+          // 添加子分类
+          if (!this.currentData.children) {
+            this.$set(this.currentData, 'children', [])
+          }
+          this.currentData.children.push({
+            label: this.form.label
+          })
+        }
+        this.$message.success('添加成功')
+      } else {
+        // 编辑操作
+        this.currentData.label = this.form.label
+        this.$message.success('编辑成功')
+      }
+
+      this.dialogVisible = false
     }
   }
 }
@@ -162,10 +346,52 @@ export default {
   overflow-y: auto;
 }
 
-.tree-container h3 {
-  margin: 0 0 10px 0;
+.tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tree-header h3 {
+  margin: 0;
   font-size: 16px;
   color: #303133;
+}
+
+.tree-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.custom-tree-node {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.custom-tree-node span {
+  flex: 1;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-tree-node .el-button {
+  padding: 4px 8px;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+:deep(.el-tree-node__content) {
+  height: auto;
+  padding: 0 8px;
+}
+
+:deep(.el-tree-node__label) {
+  flex: 1;
 }
 
 .table-container {
