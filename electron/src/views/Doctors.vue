@@ -43,6 +43,11 @@
                   <el-table-column prop="clinicName" label="诊所名称" width="150"></el-table-column>
                   <el-table-column prop="address" label="地址" min-width="200"></el-table-column>
                   <el-table-column prop="specialize" label="擅长" min-width="150"></el-table-column>
+                  <el-table-column prop="introduction" label="简介" min-width="200" show-overflow-tooltip>
+                    <template #default="scope">
+                      {{ scope.row.introduction || '暂无简介' }}
+                    </template>
+                  </el-table-column>
                   <el-table-column label="操作" width="100" fixed="right">
                     <template #default="scope">
                       <el-button type="text" size="small" @click="handleEditDoctor(scope.row)" title="编辑医生">
@@ -91,12 +96,9 @@
           show-word-limit
         ></el-input>
       </el-form-item>
-      <el-form-item label="经度" required>
-        <el-input v-model="form.lng" type="number" placeholder="请输入经度"></el-input>
-      </el-form-item>
-      <el-form-item label="纬度" required>
-        <el-input v-model="form.lat" type="number" placeholder="请输入纬度"></el-input>
-      </el-form-item>
+      <!-- 经纬度输入框，不显示，通过地址自动获取 -->
+      <el-input v-model="form.lng" type="hidden"></el-input>
+      <el-input v-model="form.lat" type="hidden"></el-input>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
@@ -343,32 +345,42 @@ export default {
         this.$message.error('请输入医生擅长领域')
         return
       }
-      if (!this.form.lng || !this.form.lat) {
-        this.$message.error('请输入经纬度')
-        return
-      }
       
-      if (this.isAdd) {
-        // 添加操作
-        request.post('/doctors', this.form).then(res => {
-          this.$message.success('添加成功')
-          this.dialogVisible = false
-          // 重新加载医生数据
-          this.loadDoctors()
-        }).catch(err => {
-          this.$message.error(err.message || '添加失败，请稍后重试')
-        })
-      } else {
-        // 编辑操作
-        request.put(`/doctors/${this.form.id}`, this.form).then(res => {
-          this.$message.success('编辑成功')
-          this.dialogVisible = false
-          // 重新加载医生数据
-          this.loadDoctors()
-        }).catch(err => {
-          this.$message.error(err.message || '编辑失败，请稍后重试')
-        })
-      }
+      
+      // 使用百度地图API进行地理编码获取经纬度
+      const geocoder = new window.BMapGL.Geocoder()
+      geocoder.getPoint(this.form.address, (point) => {
+        if (point) {
+          // 获取到经纬度，赋值给form
+          this.form.lng = point.lng
+          this.form.lat = point.lat
+          
+          if (this.isAdd) {
+            // 添加操作
+            request.post('/doctors', this.form).then(res => {
+              this.$message.success('添加成功')
+              this.dialogVisible = false
+              // 重新加载医生数据
+              this.loadDoctors()
+            }).catch(err => {
+              this.$message.error(err.message || '添加失败，请稍后重试')
+            })
+          } else {
+            // 编辑操作
+            request.put(`/doctors/${this.form.id}`, this.form).then(res => {
+              this.$message.success('编辑成功')
+              this.dialogVisible = false
+              // 重新加载医生数据
+              this.loadDoctors()
+            }).catch(err => {
+              this.$message.error(err.message || '编辑失败，请稍后重试')
+            })
+          }
+        } else {
+          // 地理编码失败
+          this.$message.error('无法获取地址的经纬度，请检查地址是否正确')
+        }
+      }, '')
     },
     
     // 删除医生
