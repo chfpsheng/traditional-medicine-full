@@ -26,7 +26,6 @@
           :data="categories"
           :props="defaultProps"
           @node-click="handleNodeClick"
-          :default-expanded-keys="['内科', '外科', '妇科', '儿科']"
           :highlight-current="true"
           current-node-key="currentNodeKey"
         >
@@ -124,12 +123,15 @@ export default {
       currentSubCategory: '',
       defaultProps: {
         children: 'children',
-        label: 'label'
+        label: 'label',
+        id: 'id'
       },
       dialogVisible: false,
       dialogTitle: '',
       form: {
-        label: ''
+        id: '',
+        label: '',
+        parentId: null
       },
       currentNode: null,
       currentData: null,
@@ -222,7 +224,7 @@ export default {
     // 添加根分类
     handleAddRoot() {
       this.dialogTitle = '添加分类'
-      this.form = { label: '' }
+      this.form = { id: '', label: '', parentId: null }
       this.currentNode = null
       this.currentData = null
       this.isAdd = true
@@ -232,7 +234,7 @@ export default {
     // 添加子分类
     handleAddChild(data, node) {
       this.dialogTitle = '添加子分类'
-      this.form = { label: '' }
+      this.form = { id: '', label: '', parentId: data.id }
       this.currentNode = node
       this.currentData = data
       this.isAdd = true
@@ -242,7 +244,7 @@ export default {
     // 编辑分类
     handleEdit(data, node) {
       this.dialogTitle = '编辑分类'
-      this.form = { label: data.label }
+      this.form = { id: data.id, label: data.label, parentId: data.parentId || null }
       this.currentNode = node
       this.currentData = data
       this.isAdd = false
@@ -256,25 +258,22 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        if (node.level === 1) {
-          // 删除一级分类
-          const index = this.categories.findIndex(item => item.label === data.label)
-          if (index > -1) {
-            this.categories.splice(index, 1)
+        // 调用后端删除接口
+        request.delete(`/categories/${data.id}`).then(res => {
+          if (res.code === 200) {
+            this.$message.success('删除成功')
+            // 重新加载分类数据
+            this.loadCategories()
+            // 重置选中状态
+            this.currentNodeKey = null
+            // 重置筛选条件
+            this.handleReset()
+          } else {
+            this.$message.error(res.message)
           }
-        } else {
-          // 删除二级分类
-          const parent = node.parent.data
-          if (parent && parent.children) {
-            const index = parent.children.findIndex(item => item.label === data.label)
-            if (index > -1) {
-              parent.children.splice(index, 1)
-            }
-          }
-        }
-        this.$message.success('删除成功')
-        // 重置选中状态
-        this.currentNodeKey = null
+        }).catch(err => {
+          this.$message.error('删除失败，请稍后重试')
+        })
       }).catch(() => {
         this.$message.info('已取消删除')
       })
@@ -289,29 +288,47 @@ export default {
 
       if (this.isAdd) {
         // 添加操作
-        if (!this.currentNode) {
-          // 添加根分类
-          this.categories.push({
-            label: this.form.label,
-            children: []
-          })
-        } else {
-          // 添加子分类
-          if (!this.currentData.children) {
-            this.$set(this.currentData, 'children', [])
-          }
-          this.currentData.children.push({
-            label: this.form.label
-          })
+        const params = {
+          parentId: this.form.parentId,
+          label: this.form.label
         }
-        this.$message.success('添加成功')
+        
+        // 调用后端添加接口
+        request.post('/categories', params).then(res => {
+          if (res.code === 200) {
+            this.$message.success('添加成功')
+            this.dialogVisible = false
+            // 重新加载分类数据
+            this.loadCategories()
+          } else {
+            this.$message.error(res.message)
+          }
+        }).catch(err => {
+          this.$message.error('添加失败，请稍后重试')
+        })
       } else {
         // 编辑操作
-        this.currentData.label = this.form.label
-        this.$message.success('编辑成功')
+        const params = {
+          id: this.form.id,
+          label: this.form.label
+        }
+        
+        // 调用后端编辑接口
+        request.put('/categories', params).then(res => {
+          if (res.code === 200) {
+            this.$message.success('编辑成功')
+            this.dialogVisible = false
+            // 重新加载分类数据
+            this.loadCategories()
+            // 重新加载方子数据
+            this.loadPrescriptions()
+          } else {
+            this.$message.error(res.message)
+          }
+        }).catch(err => {
+          this.$message.error('编辑失败，请稍后重试')
+        })
       }
-
-      this.dialogVisible = false
     }
   }
 }

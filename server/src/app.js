@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const User = require('./models/User');
 const Prescription = require('./models/Prescription');
 const Doctor = require('./models/Doctor');
+const Category = require('./models/Category');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,6 +35,40 @@ const initData = async () => {
       });
       await adminUser.save();
       console.log('管理员用户已创建');
+    }
+
+    // 检查是否已有分类数据
+    const categoryCount = await Category.countDocuments();
+    if (categoryCount === 0) {
+      // 创建初始分类数据
+      // 根分类
+      const internalCategory = await Category.create({ label: '内科', parentId: null });
+      const surgeryCategory = await Category.create({ label: '外科', parentId: null });
+      const gynecologyCategory = await Category.create({ label: '妇科', parentId: null });
+      const pediatricsCategory = await Category.create({ label: '儿科', parentId: null });
+      
+      // 内科子分类
+      await Category.create({ label: '感冒', parentId: internalCategory._id });
+      await Category.create({ label: '咳嗽', parentId: internalCategory._id });
+      await Category.create({ label: '高血压', parentId: internalCategory._id });
+      await Category.create({ label: '糖尿病', parentId: internalCategory._id });
+      
+      // 外科子分类
+      await Category.create({ label: '烫伤', parentId: surgeryCategory._id });
+      await Category.create({ label: '扭伤', parentId: surgeryCategory._id });
+      await Category.create({ label: '疮疡', parentId: surgeryCategory._id });
+      
+      // 妇科子分类
+      await Category.create({ label: '痛经', parentId: gynecologyCategory._id });
+      await Category.create({ label: '月经不调', parentId: gynecologyCategory._id });
+      await Category.create({ label: '产后调理', parentId: gynecologyCategory._id });
+      
+      // 儿科子分类
+      await Category.create({ label: '积食', parentId: pediatricsCategory._id });
+      await Category.create({ label: '发烧', parentId: pediatricsCategory._id });
+      await Category.create({ label: '腹泻', parentId: pediatricsCategory._id });
+      
+      console.log('初始分类数据已创建');
     }
 
     // 检查是否已有验方数据
@@ -189,44 +224,141 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
-// 获取分类列表
-app.get('/api/categories', (req, res) => {
-  const categories = [
-    {
-      label: '内科',
-      children: [
-        { label: '感冒' },
-        { label: '咳嗽' },
-        { label: '高血压' },
-        { label: '糖尿病' }
-      ]
-    },
-    {
-      label: '外科',
-      children: [
-        { label: '烫伤' },
-        { label: '扭伤' },
-        { label: '疮疡' }
-      ]
-    },
-    {
-      label: '妇科',
-      children: [
-        { label: '痛经' },
-        { label: '月经不调' },
-        { label: '产后调理' }
-      ]
-    },
-    {
-      label: '儿科',
-      children: [
-        { label: '积食' },
-        { label: '发烧' },
-        { label: '腹泻' }
-      ]
+// 构建树形结构的辅助函数
+const buildTree = (categories) => {
+  const tree = [];
+  const map = {};
+  
+  // 先将所有分类按id存入map
+  categories.forEach(category => {
+    map[category._id] = {
+      id: category._id,
+      label: category.label,
+      children: []
+    };
+  });
+  
+  // 构建树形结构
+  categories.forEach(category => {
+    if (category.parentId === null) {
+      // 根节点
+      tree.push(map[category._id]);
+    } else {
+      // 子节点
+      if (map[category.parentId]) {
+        map[category.parentId].children.push(map[category._id]);
+      }
     }
-  ];
-  res.json({ code: 200, message: 'success', data: categories });
+  });
+  
+  return tree;
+};
+
+// 获取分类列表
+app.get('/api/categories', async (req, res) => {
+  try {
+    // 从数据库获取所有分类
+    const categories = await Category.find();
+    // 构建树形结构
+    const tree = buildTree(categories);
+    res.json({ code: 200, message: 'success', data: tree });
+  } catch (error) {
+    console.error('获取分类列表失败:', error);
+    res.status(500).json({ code: 500, message: '获取分类列表失败，请稍后重试' });
+  }
+});
+
+// 新增分类
+app.post('/api/categories', async (req, res) => {
+  try {
+    const { parentId, label } = req.body;
+    
+    if (!label) {
+      return res.status(400).json({ code: 400, message: '分类名称不能为空' });
+    }
+    
+    // 创建分类
+    const newCategory = await Category.create({
+      label,
+      parentId: parentId || null
+    });
+    
+    // 返回更新后的分类列表
+    const categories = await Category.find();
+    const tree = buildTree(categories);
+    res.json({ code: 200, message: '分类添加成功', data: tree });
+  } catch (error) {
+    console.error('添加分类失败:', error);
+    res.status(500).json({ code: 500, message: '添加分类失败，请稍后重试' });
+  }
+});
+
+// 编辑分类
+app.put('/api/categories', async (req, res) => {
+  try {
+    const { id, label } = req.body;
+    
+    if (!id || !label) {
+      return res.status(400).json({ code: 400, message: '分类ID和名称不能为空' });
+    }
+    
+    // 更新分类
+    const result = await Category.updateOne({ _id: id }, { label });
+    
+    if (result.nModified === 0) {
+      return res.status(404).json({ code: 404, message: '分类不存在' });
+    }
+    
+    // 返回更新后的分类列表
+    const categories = await Category.find();
+    const tree = buildTree(categories);
+    res.json({ code: 200, message: '分类编辑成功', data: tree });
+  } catch (error) {
+    console.error('编辑分类失败:', error);
+    res.status(500).json({ code: 500, message: '编辑分类失败，请稍后重试' });
+  }
+});
+
+// 删除分类
+app.delete('/api/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({ code: 400, message: '分类ID不能为空' });
+    }
+    
+    // 检查该分类是否存在
+    const category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ code: 404, message: '分类不存在' });
+    }
+    
+    // 检查该分类是否存在子节点
+    const childCount = await Category.countDocuments({ parentId: id });
+    if (childCount > 0) {
+      return res.status(400).json({ code: 400, message: '该分类下存在子节点，不允许删除' });
+    }
+    
+    // 检查该分类是否存在数据
+    const hasPrescriptions = await Prescription.countDocuments({ 
+      $or: [{ category: category.label }, { subCategory: category.label }] 
+    });
+    if (hasPrescriptions > 0) {
+      return res.status(400).json({ code: 400, message: '该分类下存在数据，不允许删除' });
+    }
+    
+    // 删除分类
+    await Category.findByIdAndDelete(id);
+    
+    // 返回更新后的分类列表
+    const categories = await Category.find();
+    const tree = buildTree(categories);
+    res.json({ code: 200, message: '分类删除成功', data: tree });
+  } catch (error) {
+    console.error('删除分类失败:', error);
+    res.status(500).json({ code: 500, message: '删除分类失败，请稍后重试' });
+  }
 });
 
 app.listen(PORT, () => {
