@@ -1,122 +1,123 @@
 <template>
   <div class="prescriptions-container">
-    <div class="search-bar">
-      <el-select v-model="searchForm.type" placeholder="按类型搜索" clearable>
-        <el-option label="偏方" value="偏方"></el-option>
-        <el-option label="验方" value="验方"></el-option>
-      </el-select>
-      <el-button type="primary" @click="handleSearch">搜索</el-button>
-      <el-button @click="handleReset">重置</el-button>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+      <div class="logo">
+        <el-icon><Reading /></el-icon>
+        <span>中医验方宝典</span>
+      </div>
+      <div class="nav-buttons">
+        <el-button type="primary">验方集</el-button>
+        <el-button type="primary" plain>诊断集</el-button>
+      </div>
+      <div class="user-info">
+        <el-icon><User /></el-icon>
+      </div>
     </div>
     
-    <div class="content-wrapper">
-      <div class="tree-container">
-        <div class="tree-header">
-          <h3>病症分类</h3>
-          <div class="tree-actions">
-            <el-tooltip content="添加分类" placement="top">
-              <el-button type="primary" size="small" @click="handleAddRoot">
-                <el-icon><Plus /></el-icon>
-              </el-button>
-            </el-tooltip>
-          </div>
-        </div>
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+      <!-- 左侧分类树 -->
+      <div class="sidebar">
         <el-tree
           ref="tree"
           :data="categories"
           :props="defaultProps"
           @node-click="handleNodeClick"
           :highlight-current="true"
-          current-node-key="currentNodeKey"
           node-key="id"
+          :expand-on-click-node="false"
         >
-          <template #default="{ node, data }">
-            <span class="custom-tree-node">
-              <span>{{ data.label }}</span>
-              <span v-if="data.label === currentNodeKey">
-                <el-tooltip content="添加子节点" placement="top">
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click.stop="() => handleAddChild(data, node)"
-                  >
-                    <el-icon><Plus /></el-icon>
-                  </el-button>
-                </el-tooltip>
-                <el-tooltip content="编辑节点" placement="top">
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click.stop="() => handleEdit(data, node)"
-                  >
-                    <el-icon><Edit /></el-icon>
-                  </el-button>
-                </el-tooltip>
-                <el-tooltip content="删除节点" placement="top">
-                  <el-button
-                    type="text"
-                    size="small"
-                    @click.stop="() => handleDelete(data, node)"
-                  >
-                    <el-icon><Delete /></el-icon>
-                  </el-button>
-                </el-tooltip>
-              </span>
-            </span>
-          </template>
         </el-tree>
-
-        <!-- 添加/编辑对话框 -->
-        <el-dialog
-          v-model="dialogVisible"
-          :title="dialogTitle"
-          width="30%"
-        >
-          <el-form :model="form" label-width="80px">
-            <el-form-item label="分类名称">
-              <el-input v-model="form.label" placeholder="请输入分类名称"></el-input>
-            </el-form-item>
-          </el-form>
-          <template #footer>
-            <span class="dialog-footer">
-              <el-button @click="dialogVisible = false">取消</el-button>
-              <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
-            </span>
-          </template>
-        </el-dialog>
       </div>
       
-      <div class="table-container">
-        <h3>方子列表</h3>
-        <el-table :data="prescriptions" style="width: 100%">
-          <el-table-column prop="type" label="类型" width="100"></el-table-column>
-          <el-table-column prop="category" label="大分类" width="100"></el-table-column>
-          <el-table-column prop="subCategory" label="小分类" width="100"></el-table-column>
-          <el-table-column prop="content" label="内容" min-width="200"></el-table-column>
-          <el-table-column prop="note" label="注意事项" min-width="150"></el-table-column>
-          <el-table-column prop="source" label="来源" min-width="100"></el-table-column>
-        </el-table>
+      <!-- 右侧内容区 -->
+      <div class="content">
+        <!-- 搜索栏 -->
+        <div class="search-section">
+          <el-input 
+            v-model="searchKeyword" 
+            placeholder="搜索方剂名称、病症或内容" 
+            class="search-input"
+            clearable
+            @keyup.enter="handleSearch"
+          >
+          </el-input>
+          <el-select v-model="searchForm.type" placeholder="按类型筛选" clearable>
+            <el-option label="偏方" value="偏方"></el-option>
+            <el-option label="验方" value="验方"></el-option>
+          </el-select>
+          <el-button @click="handleReset"><el-icon><Refresh /></el-icon></el-button>
+        </div>
+        
+        <!-- 方剂列表 -->
+        <div class="prescriptions-table">
+          <el-table :data="prescriptions" style="width: 100%">
+            <el-table-column prop="type" label="类型" width="80">
+              <template #default="scope">
+                <el-tag :type="scope.row.type === '验方' ? 'success' : 'info'" size="small">{{ scope.row.type }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="subCategory" label="病症" width="120"></el-table-column>
+            <el-table-column prop="category" label="方剂名称" width="180"></el-table-column>
+            <el-table-column prop="content" label="内容摘要" min-width="400">
+              <template #default="scope">
+                <div class="content-summary">{{ scope.row.content }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="source" label="来源" width="150"></el-table-column>
+            <el-table-column label="操作" width="100">
+              <template #default="scope">
+                <el-button type="text" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
       </div>
     </div>
+    
+    <!-- 添加/编辑对话框 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="30%"
+    >
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="分类名称">
+          <el-input v-model="form.label" placeholder="请输入分类名称"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import request from '../utils/request'
-import { Edit, Delete, Plus } from '@element-plus/icons-vue'
+import { Edit, Delete, Plus, Reading, User, Search, Refresh } from '@element-plus/icons-vue'
 
 export default {
   name: 'Prescriptions',
   components: {
     Edit,
     Delete,
-    Plus
+    Plus,
+    Reading,
+    User,
+    Search,
+    Refresh
   },
   data() {
     return {
       categories: [],
       prescriptions: [],
       allPrescriptions: [],
+      searchKeyword: '',
       searchForm: {
         type: ''
       },
@@ -192,6 +193,7 @@ export default {
     },
     
     handleReset() {
+      this.searchKeyword = ''
       this.searchForm.type = ''
       this.currentCategory = ''
       this.currentSubCategory = ''
@@ -203,6 +205,16 @@ export default {
     
     filterPrescriptions() {
       let filtered = this.allPrescriptions
+      
+      // 按搜索关键字筛选
+      if (this.searchKeyword) {
+        const keyword = this.searchKeyword.toLowerCase()
+        filtered = filtered.filter(item => 
+          item.content.toLowerCase().includes(keyword) ||
+          item.category.toLowerCase().includes(keyword) ||
+          item.subCategory.toLowerCase().includes(keyword)
+        )
+      }
       
       // 按类型筛选
       if (this.searchForm.type) {
@@ -332,100 +344,153 @@ export default {
 </script>
 
 <style scoped>
+/* 全局容器 */
 .prescriptions-container {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.search-bar {
-  margin-bottom: 20px;
+  width: 100%;
+  height: 100vh;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  background-color: #f5f7fa;
 }
 
-.content-wrapper {
-  display: flex;
-  gap: 20px;
-  height: calc(100vh - 200px);
-}
-
-.tree-container {
-  width: 250px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.tree-header {
+/* 顶部导航栏 */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  padding: 0 20px;
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.tree-header h3 {
-  margin: 0;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #409EFF;
+}
+
+.logo .el-icon {
+  font-size: 24px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.user-info .el-icon {
+  font-size: 20px;
+  color: #606266;
+}
+
+/* 主要内容区域 */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 左侧分类树 */
+.sidebar {
+  width: 180px;
+  background-color: #fff;
+  border-right: 1px solid #e4e7ed;
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.sidebar-title {
+  margin: 0 20px 15px;
   font-size: 16px;
+  font-weight: bold;
   color: #303133;
 }
 
-.tree-actions {
-  display: flex;
-  gap: 5px;
-}
-
-.custom-tree-node {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.custom-tree-node span {
-  flex: 1;
-  display: inline-block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.custom-tree-node .el-button {
-  padding: 4px 6px;
-  font-size: 12px;
-  margin-left: 2px;
+/* 树节点样式 */
+:deep(.el-tree) {
+  background-color: transparent;
 }
 
 :deep(.el-tree-node__content) {
-  height: auto;
-  padding: 0 8px;
+  padding: 6px 20px;
 }
 
 :deep(.el-tree-node__label) {
-  flex: 1;
+  font-size: 14px;
+  color: #606266;
 }
 
-.table-container {
+:deep(.el-tree-node.is-current > .el-tree-node__content) {
+  background-color: #ecf5ff;
+  color: #409EFF;
+}
+
+:deep(.el-tree-node.is-current > .el-tree-node__content .el-tree-node__label) {
+  color: #409EFF;
+}
+
+/* 右侧内容区 */
+.content {
   flex: 1;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 10px;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 搜索栏 */
+.search-section {
   display: flex;
-  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 300px;
+}
+
+:deep(.el-select) {
+  width: 120px;
+}
+
+/* 方剂列表 */
+.prescriptions-table {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
-.table-container h3 {
-  margin: 0 0 10px 0;
-  font-size: 16px;
-  color: #303133;
+:deep(.el-table) {
+  border: none;
 }
 
-:deep(.el-table) {
-  flex: 1;
-  overflow: auto;
+:deep(.el-table__header-wrapper) {
+  background-color: #fafafa;
+}
+
+:deep(.el-table__header th) {
+  font-weight: bold;
+  background-color: #fafafa;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+:deep(.el-table__body td) {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+:deep(.el-table__row:hover > td) {
+  background-color: #f5f7fa;
+}
+
+/* 内容摘要样式 */
+.content-summary {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.5;
 }
 </style>
