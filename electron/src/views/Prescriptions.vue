@@ -77,15 +77,29 @@
             </el-table-column>
             <el-table-column prop="subCategory" label="病症" width="120"></el-table-column>
             <el-table-column prop="category" label="方剂名称" width="180"></el-table-column>
-            <el-table-column prop="content" label="内容摘要" min-width="400">
+            <el-table-column prop="content" label="内容摘要" min-width="300">
               <template #default="scope">
                 <div class="content-summary">{{ scope.row.content }}</div>
               </template>
             </el-table-column>
-            <el-table-column prop="source" label="来源" width="150"></el-table-column>
-            <el-table-column label="操作" width="100">
+            <el-table-column prop="author" label="作者" width="120"></el-table-column>
+            <el-table-column prop="notes" label="注意事项" min-width="200">
               <template #default="scope">
-                <el-button type="text" size="small">查看</el-button>
+                <div class="content-summary">{{ scope.row.notes }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="source" label="来源" width="120"></el-table-column>
+            <el-table-column label="操作" width="120" fixed="right">
+              <template #default="scope">
+                <el-button type="text" size="small" @click="handleViewPrescription(scope.row)" title="查看详情">
+                  <el-icon><Search /></el-icon>
+                </el-button>
+                <el-button type="text" size="small" @click="handleEditPrescription(scope.row)" title="编辑方剂">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button type="text" size="small" @click="handleDeletePrescription(scope.row)" title="删除方剂">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -364,6 +378,38 @@ export default {
           this.$message.error('编辑失败，请稍后重试')
         })
       }
+    },
+    
+    // 查看方剂详情
+    handleViewPrescription(row) {
+      this.$message.info('查看方剂详情功能开发中')
+      // 这里可以添加查看方剂详情的逻辑，例如打开详情对话框
+    },
+    
+    // 编辑方剂
+    handleEditPrescription(row) {
+      this.$message.info('编辑方剂功能开发中')
+      // 这里可以添加编辑方剂的逻辑，例如打开编辑对话框
+    },
+    
+    // 删除方剂
+    handleDeletePrescription(row) {
+      this.$confirm('确定要删除该方剂吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 调用后端删除接口
+        request.delete(`/prescriptions/${row.id}`).then(res => {
+          this.$message.success('删除成功')
+          // 重新加载方剂数据
+          this.loadPrescriptions()
+        }).catch(err => {
+          this.$message.error(err.message || '删除失败，请稍后重试')
+        })
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
     }
   }
 }
@@ -483,6 +529,32 @@ export default {
   color: #409EFF;
   background: transparent;
   border: none;
+}
+
+/* 表格操作列样式 */
+:deep(.el-table__column--selection .el-table__cell) {
+  padding: 8px 0;
+}
+
+:deep(.el-table__column--selection .el-button) {
+  display: inline-block;
+  margin: 0;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+:deep(.el-table .el-button--text) {
+  display: inline-block;
+  margin: 0 1px;
+  padding: 4px 5px;
+  line-height: 1;
+  min-width: auto;
+  height: auto;
+}
+
+:deep(.el-table .el-button--text .el-icon) {
+  font-size: 14px;
+  vertical-align: middle;
 }
 
 /* 右侧内容区 */

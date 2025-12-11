@@ -81,7 +81,8 @@ const initData = async () => {
           category: '内科',
           subCategory: '感冒',
           content: '生姜10g，葱白3段，红糖适量，水煎服',
-          note: '适用于风寒感冒',
+          author: '张仲景',
+          notes: '适用于风寒感冒',
           source: '《伤寒论》'
         },
         {
@@ -89,7 +90,8 @@ const initData = async () => {
           category: '内科',
           subCategory: '咳嗽',
           content: '冰糖炖雪梨',
-          note: '适用于肺热咳嗽',
+          author: '民间',
+          notes: '适用于肺热咳嗽',
           source: '民间流传'
         },
         {
@@ -97,7 +99,8 @@ const initData = async () => {
           category: '外科',
           subCategory: '烫伤',
           content: '芦荟汁涂抹患处',
-          note: '轻度烫伤适用',
+          author: '李时珍',
+          notes: '轻度烫伤适用',
           source: '《本草纲目》'
         },
         {
@@ -105,7 +108,8 @@ const initData = async () => {
           category: '妇科',
           subCategory: '痛经',
           content: '当归10g，川芎5g，白芍10g，熟地15g',
-          note: '适用于气血不足型痛经',
+          author: '张仲景',
+          notes: '适用于气血不足型痛经',
           source: '《金匮要略》'
         },
         {
@@ -113,7 +117,8 @@ const initData = async () => {
           category: '儿科',
           subCategory: '积食',
           content: '山楂30g，神曲15g，麦芽15g',
-          note: '适用于小儿积食',
+          author: '民间',
+          notes: '适用于小儿积食',
           source: '民间流传'
         }
       ];
