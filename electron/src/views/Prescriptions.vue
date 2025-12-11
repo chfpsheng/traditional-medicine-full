@@ -28,6 +28,7 @@
           @node-click="handleNodeClick"
           :highlight-current="true"
           current-node-key="currentNodeKey"
+          node-key="id"
         >
           <template #default="{ node, data }">
             <span class="custom-tree-node">
@@ -260,19 +261,15 @@ export default {
       }).then(() => {
         // 调用后端删除接口
         request.delete(`/categories/${data.id}`).then(res => {
-          if (res.code === 200) {
-            this.$message.success('删除成功')
-            // 重新加载分类数据
-            this.loadCategories()
-            // 重置选中状态
-            this.currentNodeKey = null
-            // 重置筛选条件
-            this.handleReset()
-          } else {
-            this.$message.error(res.message)
-          }
+          this.$message.success('删除成功')
+          // 重新加载分类数据
+          this.loadCategories()
+          // 重置选中状态
+          this.currentNodeKey = null
+          // 重置筛选条件
+          this.handleReset()
         }).catch(err => {
-          this.$message.error('删除失败，请稍后重试')
+          this.$message.error(err.message || '删除失败，请稍后重试')
         })
       }).catch(() => {
         this.$message.info('已取消删除')
@@ -397,9 +394,9 @@ export default {
 }
 
 .custom-tree-node .el-button {
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 12px;
-  margin-left: 5px;
+  margin-left: 2px;
 }
 
 :deep(.el-tree-node__content) {
