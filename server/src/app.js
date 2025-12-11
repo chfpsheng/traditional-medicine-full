@@ -229,6 +229,73 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
+// 添加医生
+app.post('/api/doctors', async (req, res) => {
+  try {
+    const { name, clinicName, address, specialize, lng, lat } = req.body;
+    
+    // 创建医生实例
+    const newDoctor = new Doctor({
+      name,
+      clinicName,
+      address,
+      specialize,
+      lng,
+      lat
+    });
+    
+    // 保存医生数据
+    const savedDoctor = await newDoctor.save();
+    res.json({ code: 200, message: '医生添加成功', data: savedDoctor });
+  } catch (error) {
+    console.error('添加医生失败:', error);
+    res.status(500).json({ code: 500, message: '添加医生失败，请稍后重试' });
+  }
+});
+
+// 编辑医生
+app.put('/api/doctors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, clinicName, address, specialize, lng, lat } = req.body;
+    
+    // 查找并更新医生数据
+    const updatedDoctor = await Doctor.findByIdAndUpdate(
+      id,
+      { name, clinicName, address, specialize, lng, lat },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedDoctor) {
+      return res.status(404).json({ code: 404, message: '医生不存在' });
+    }
+    
+    res.json({ code: 200, message: '医生更新成功', data: updatedDoctor });
+  } catch (error) {
+    console.error('更新医生失败:', error);
+    res.status(500).json({ code: 500, message: '更新医生失败，请稍后重试' });
+  }
+});
+
+// 删除医生
+app.delete('/api/doctors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 查找并删除医生数据
+    const deletedDoctor = await Doctor.findByIdAndDelete(id);
+    
+    if (!deletedDoctor) {
+      return res.status(404).json({ code: 404, message: '医生不存在' });
+    }
+    
+    res.json({ code: 200, message: '医生删除成功', data: deletedDoctor });
+  } catch (error) {
+    console.error('删除医生失败:', error);
+    res.status(500).json({ code: 500, message: '删除医生失败，请稍后重试' });
+  }
+});
+
 // 构建树形结构的辅助函数
 const buildTree = (categories) => {
   const tree = [];

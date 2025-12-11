@@ -42,6 +42,16 @@
                   <el-table-column prop="clinicName" label="诊所名称" width="150"></el-table-column>
                   <el-table-column prop="address" label="地址" min-width="200"></el-table-column>
                   <el-table-column prop="specialize" label="擅长" min-width="150"></el-table-column>
+                  <el-table-column label="操作" width="100" fixed="right">
+                    <template #default="scope">
+                      <el-button type="text" size="small" @click="handleEditDoctor(scope.row)" title="编辑医生">
+                        <el-icon><Edit /></el-icon>
+                      </el-button>
+                      <el-button type="text" size="small" @click="handleDeleteDoctor(scope.row)" title="删除医生">
+                        <el-icon><Delete /></el-icon>
+                      </el-button>
+                    </template>
+                  </el-table-column>
                 </el-table>
               </div>
             </el-tab-pane>
@@ -50,17 +60,53 @@
       </div>
     </div>
   </div>
+  
+  <!-- 编辑医生对话框 -->
+  <el-dialog
+    v-model="dialogVisible"
+    :title="dialogTitle"
+    width="500px"
+  >
+    <el-form :model="form" label-width="100px">
+      <el-form-item label="姓名" required>
+        <el-input v-model="form.name" placeholder="请输入医生姓名"></el-input>
+      </el-form-item>
+      <el-form-item label="诊所名称" required>
+        <el-input v-model="form.clinicName" placeholder="请输入诊所名称"></el-input>
+      </el-form-item>
+      <el-form-item label="地址" required>
+        <el-input v-model="form.address" placeholder="请输入诊所地址"></el-input>
+      </el-form-item>
+      <el-form-item label="擅长" required>
+        <el-input v-model="form.specialize" placeholder="请输入医生擅长领域"></el-input>
+      </el-form-item>
+      <el-form-item label="经度" required>
+        <el-input v-model="form.lng" type="number" placeholder="请输入经度"></el-input>
+      </el-form-item>
+      <el-form-item label="纬度" required>
+        <el-input v-model="form.lat" type="number" placeholder="请输入纬度"></el-input>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script>
 import request from '../utils/request'
-import { User, Refresh } from '@element-plus/icons-vue'
+import { User, Refresh, Edit, Delete } from '@element-plus/icons-vue'
 
 export default {
   name: 'Doctors',
   components: {
     User,
-    Refresh
+    Refresh,
+    Edit,
+    Delete
   },
   data() {
     return {
@@ -69,6 +115,19 @@ export default {
       filteredDoctors: [],
       searchKeyword: '',
       selectedDoctor: null,
+      // 编辑对话框配置
+      dialogVisible: false,
+      dialogTitle: '',
+      form: {
+        id: '',
+        name: '',
+        clinicName: '',
+        address: '',
+        specialize: '',
+        lng: 0,
+        lat: 0
+      },
+      isAdd: false,
       // 百度地图配置
       mapInstance: null, // 地图实例
       markers: [], // 标记点数组
@@ -214,6 +273,106 @@ export default {
         
         this.mapInstance.addOverlay(marker)
         this.markers.push(marker)
+      })
+    },
+    
+    // 添加医生
+    handleAddDoctor() {
+      this.dialogTitle = '添加医生'
+      this.form = {
+        id: '',
+        name: '',
+        clinicName: '',
+        address: '',
+        specialize: '',
+        lng: 116.404,
+        lat: 39.915
+      }
+      this.isAdd = true
+      this.dialogVisible = true
+    },
+    
+    // 编辑医生
+    handleEditDoctor(row) {
+      console.log(222222,row)
+      this.dialogTitle = '编辑医生'
+      this.form = {
+        id: row.id,
+        name: row.name,
+        clinicName: row.clinicName,
+        address: row.address,
+        specialize: row.specialize,
+        lng: row.lng,
+        lat: row.lat
+      }
+      this.isAdd = false
+      this.dialogVisible = true
+    },
+    
+    // 对话框确定按钮
+    handleDialogConfirm() {
+      // 表单验证
+      if (!this.form.name.trim()) {
+        this.$message.error('请输入医生姓名')
+        return
+      }
+      if (!this.form.clinicName.trim()) {
+        this.$message.error('请输入诊所名称')
+        return
+      }
+      if (!this.form.address.trim()) {
+        this.$message.error('请输入诊所地址')
+        return
+      }
+      if (!this.form.specialize.trim()) {
+        this.$message.error('请输入医生擅长领域')
+        return
+      }
+      if (!this.form.lng || !this.form.lat) {
+        this.$message.error('请输入经纬度')
+        return
+      }
+      
+      if (this.isAdd) {
+        // 添加操作
+        request.post('/doctors', this.form).then(res => {
+          this.$message.success('添加成功')
+          this.dialogVisible = false
+          // 重新加载医生数据
+          this.loadDoctors()
+        }).catch(err => {
+          this.$message.error(err.message || '添加失败，请稍后重试')
+        })
+      } else {
+        // 编辑操作
+        request.put(`/doctors/${this.form.id}`, this.form).then(res => {
+          this.$message.success('编辑成功')
+          this.dialogVisible = false
+          // 重新加载医生数据
+          this.loadDoctors()
+        }).catch(err => {
+          this.$message.error(err.message || '编辑失败，请稍后重试')
+        })
+      }
+    },
+    
+    // 删除医生
+    handleDeleteDoctor(row) {
+      this.$confirm('确定要删除该医生吗？', '删除确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 调用后端删除接口
+        request.delete(`/doctors/${row.id}`).then(res => {
+          this.$message.success('删除成功')
+          // 重新加载医生数据
+          this.loadDoctors()
+        }).catch(err => {
+          this.$message.error(err.message || '删除失败，请稍后重试')
+        })
+      }).catch(() => {
+        this.$message.info('已取消删除')
       })
     }
   }
@@ -408,5 +567,41 @@ export default {
 
 :deep(.el-table__row:hover > td) {
   background-color: #f5f7fa;
+}
+
+/* 表格操作列样式 */
+:deep(.el-table__column--selection .el-button) {
+  display: inline-block;
+  margin: 0;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+:deep(.el-table .el-button--text) {
+  display: inline-block;
+  margin: 0 1px;
+  padding: 4px 5px;
+  line-height: 1;
+  min-width: auto;
+  height: auto;
+  vertical-align: middle;
+}
+
+:deep(.el-table .el-button--text .el-icon) {
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* 确保操作列单元格内容在同一行 */
+:deep(.el-table__cell--right) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:deep(.el-table__cell--fixed-right) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
