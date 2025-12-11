@@ -228,6 +228,74 @@ app.get('/api/prescriptions', async (req, res) => {
   }
 });
 
+// 添加方剂
+app.post('/api/prescriptions', async (req, res) => {
+  try {
+    const { type, category, subCategory, content, author = '', notes = '', source = '' } = req.body;
+    
+    // 创建方剂实例
+    const newPrescription = new Prescription({
+      type,
+      category,
+      subCategory,
+      content,
+      author,
+      notes,
+      source
+    });
+    
+    // 保存方剂数据
+    const savedPrescription = await newPrescription.save();
+    res.json({ code: 200, message: '方剂添加成功', data: savedPrescription });
+  } catch (error) {
+    console.error('添加方剂失败:', error);
+    res.status(500).json({ code: 500, message: '添加方剂失败，请稍后重试' });
+  }
+});
+
+// 编辑方剂
+app.put('/api/prescriptions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, category, subCategory, content, author = '', notes = '', source = '' } = req.body;
+    
+    // 查找并更新方剂数据
+    const updatedPrescription = await Prescription.findByIdAndUpdate(
+      id,
+      { type, category, subCategory, content, author, notes, source },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedPrescription) {
+      return res.status(404).json({ code: 404, message: '方剂不存在' });
+    }
+    
+    res.json({ code: 200, message: '方剂更新成功', data: updatedPrescription });
+  } catch (error) {
+    console.error('更新方剂失败:', error);
+    res.status(500).json({ code: 500, message: '更新方剂失败，请稍后重试' });
+  }
+});
+
+// 删除方剂
+app.delete('/api/prescriptions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 查找并删除方剂数据
+    const deletedPrescription = await Prescription.findByIdAndDelete(id);
+    
+    if (!deletedPrescription) {
+      return res.status(404).json({ code: 404, message: '方剂不存在' });
+    }
+    
+    res.json({ code: 200, message: '方剂删除成功', data: deletedPrescription });
+  } catch (error) {
+    console.error('删除方剂失败:', error);
+    res.status(500).json({ code: 500, message: '删除方剂失败，请稍后重试' });
+  }
+});
+
 // 获取医生列表
 app.get('/api/doctors', async (req, res) => {
   try {

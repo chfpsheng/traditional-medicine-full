@@ -19,25 +19,18 @@
         
         <!-- 医生列表 -->
         <div class="doctors-content">
-          <el-tabs v-model="activeTab" type="card">
+          <el-tabs v-model="activeTab" type="card" @tab-change="handleTabChange">
             <el-tab-pane label="地图视图" name="map">
               <div class="map-wrapper">
                 <!-- 百度地图组件 -->
                 <div ref="mapContainer" class="map-container"></div>
-                <div class="doctor-detail" v-if="selectedDoctor">
-                  <h3>医生详情</h3>
-                  <el-descriptions :column="1" border>
-                    <el-descriptions-item label="姓名">{{ selectedDoctor.name }}</el-descriptions-item>
-                    <el-descriptions-item label="诊所名称">{{ selectedDoctor.clinicName }}</el-descriptions-item>
-                    <el-descriptions-item label="地址">{{ selectedDoctor.address }}</el-descriptions-item>
-                    <el-descriptions-item label="擅长">{{ selectedDoctor.specialize }}</el-descriptions-item>
-                    <el-descriptions-item label="简介">{{ selectedDoctor.introduction || '暂无简介' }}</el-descriptions-item>
-                  </el-descriptions>
-                </div>
               </div>
             </el-tab-pane>
             <el-tab-pane label="表格视图" name="table">
               <div class="table-wrapper">
+                <div class="table-header" style="margin-bottom: 10px; display: flex; justify-content: flex-end;">
+                  <el-button type="primary" @click="handleAddDoctor" v-if="activeTab === 'table'"><el-icon><Plus /></el-icon> 新增医生</el-button>
+                </div>
                 <el-table :data="filteredDoctors" style="width: 100%">
                   <el-table-column prop="name" label="姓名" width="100"></el-table-column>
                   <el-table-column prop="clinicName" label="诊所名称" width="150"></el-table-column>
@@ -77,13 +70,13 @@
       <el-form-item label="姓名" required>
         <el-input v-model="form.name" placeholder="请输入医生姓名"></el-input>
       </el-form-item>
-      <el-form-item label="诊所名称" required>
+      <el-form-item label="诊所名称">
         <el-input v-model="form.clinicName" placeholder="请输入诊所名称"></el-input>
       </el-form-item>
       <el-form-item label="地址" required>
         <el-input v-model="form.address" placeholder="请输入诊所地址"></el-input>
       </el-form-item>
-      <el-form-item label="擅长" required>
+      <el-form-item label="擅长">
         <el-input v-model="form.specialize" placeholder="请输入医生擅长领域"></el-input>
       </el-form-item>
       <el-form-item label="简介">
@@ -111,7 +104,7 @@
 
 <script>
 import request from '../utils/request'
-import { User, Refresh, Edit, Delete } from '@element-plus/icons-vue'
+import { User, Refresh, Edit, Delete, Plus } from '@element-plus/icons-vue'
 
 export default {
   name: 'Doctors',
@@ -119,7 +112,8 @@ export default {
     User,
     Refresh,
     Edit,
-    Delete
+    Delete,
+    Plus
   },
   data() {
     return {
@@ -145,7 +139,8 @@ export default {
       // 百度地图配置
       mapInstance: null, // 地图实例
       markers: [], // 标记点数组
-      infoWindow: null // 信息窗口实例
+      scriptLoaded: false, // 百度地图脚本是否已加载
+      initMapCalled: false // 初始化地图函数是否已调用
     }
   },
   created() {
@@ -171,19 +166,50 @@ export default {
     },
     
     selectDoctor(doctor) {
+      console.log('selectDoctor called:', doctor)
       this.selectedDoctor = doctor
       // 显示信息窗口
-      if (this.mapInstance && this.infoWindow) {
+      console.log('mapInstance:', this.mapInstance)
+      console.log('window.BMapGL:', window.BMapGL)
+      
+      // 确保地图实例和BMapGL对象都存在
+      if (!this.mapInstance) {
+        console.error('Map instance not found')
+        return
+      }
+      
+      if (!window.BMapGL) {
+        console.error('BMapGL not loaded')
+        return
+      }
+      
+      try {
+        // 使用BMapGL.Point创建点
         const point = new window.BMapGL.Point(doctor.lng, doctor.lat)
-        this.infoWindow.setContent(`
+        console.log('Created point:', point)
+        
+        // 使用BMapGL.InfoWindow创建信息窗口
+        const infoWindow = new window.BMapGL.InfoWindow('')
+        console.log('Created infoWindow:', infoWindow)
+        console.log('InfoWindow prototype:', Object.getPrototypeOf(infoWindow))
+        console.log('InfoWindow methods:', Object.getOwnPropertyNames(infoWindow))
+        
+        // 设置信息窗口内容
+        infoWindow.setContent(`
           <div class="info-window-content">
             <h4>${doctor.name}</h4>
-            <p>${doctor.clinicName}</p>
-            <p>${doctor.address}</p>
-            ${doctor.introduction ? `<p>${doctor.introduction}</p>` : ''}
+            ${doctor.clinicName ? `<p><strong>诊所名称：</strong>${doctor.clinicName}</p>` : ''}
+            <p><strong>地址：</strong>${doctor.address}</p>
+            ${doctor.specialize ? `<p><strong>擅长：</strong>${doctor.specialize}</p>` : ''}
+            ${doctor.introduction ? `<p><strong>简介：</strong>${doctor.introduction}</p>` : ''}
           </div>
         `)
-        this.infoWindow.open(this.mapInstance, point)
+        
+        // 直接调用open方法
+        console.log('Calling infoWindow.open()')
+        infoWindow.open(this.mapInstance, point)
+      } catch (error) {
+        console.error('Error in selectDoctor:', error)
       }
     },
     
@@ -217,11 +243,8 @@ export default {
     
     // 加载百度地图脚本
     loadBaiduMapScript() {
-      // 检查百度地图API是否已加载
-      if (window.BMapGL) {
-        this.initMap()
-        return
-      }
+      // 确保只加载一次脚本
+      if (this.scriptLoaded) return
       
       // 创建脚本标签
       const script = document.createElement('script')
@@ -230,44 +253,60 @@ export default {
       document.head.appendChild(script)
       
       // 将初始化函数挂载到window对象上
+      const that = this
       window.initBaiduMap = () => {
-        this.initMap()
+        that.scriptLoaded = true
+        that.initMap()
       }
+      
+      this.scriptLoaded = true
     },
     
     // 初始化地图
     initMap() {
-      // 创建地图实例
-      this.mapInstance = new window.BMapGL.Map(this.$refs.mapContainer)
-      // 设置地图中心点和缩放级别
-      const point = new window.BMapGL.Point(116.404, 39.915)
-      this.mapInstance.centerAndZoom(point, 12)
+      console.log('initMap called, mapContainer:', this.$refs.mapContainer)
+      // 确保地图容器存在
+      if (!this.$refs.mapContainer) {
+        console.error('Map container not found!')
+        return
+      }
       
-      // 添加地图控件
-      this.mapInstance.addControl(new window.BMapGL.ScaleControl())
-      this.mapInstance.addControl(new window.BMapGL.ZoomControl())
-      
-      // 启用鼠标滚轮缩放
-      this.mapInstance.enableScrollWheelZoom(true)
-      // 启用键盘缩放
-      this.mapInstance.enableKeyboard(true)
-      // 启用双击缩放
-      this.mapInstance.enableDoubleClickZoom(true)
-      // 启用拖拽
-      this.mapInstance.enableDragging(true)
-      // 设置缩放级别限制（3-18级）
-      this.mapInstance.setMinZoom(3)
-      this.mapInstance.setMaxZoom(18)
-      
-      // 创建信息窗口实例
-      this.infoWindow = new window.BMapGL.InfoWindow('')
-      
-      // 添加标记点
-      this.updateMarkers()
+      try {
+        // 创建地图实例
+        this.mapInstance = new window.BMapGL.Map(this.$refs.mapContainer)
+        console.log('Map instance created:', this.mapInstance)
+        
+        // 设置地图中心点和缩放级别为成都天府广场
+        const point = new window.BMapGL.Point(104.065850, 30.657361)
+        this.mapInstance.centerAndZoom(point, 12)
+        
+        // 添加地图控件
+        this.mapInstance.addControl(new window.BMapGL.ScaleControl())
+        this.mapInstance.addControl(new window.BMapGL.ZoomControl())
+        
+        // 启用鼠标滚轮缩放
+        this.mapInstance.enableScrollWheelZoom(true)
+        // 启用键盘缩放
+        this.mapInstance.enableKeyboard(true)
+        // 启用双击缩放
+        this.mapInstance.enableDoubleClickZoom(true)
+        // 启用拖拽
+        this.mapInstance.enableDragging(true)
+        // 设置缩放级别限制（3-18级）
+        this.mapInstance.setMinZoom(3)
+        this.mapInstance.setMaxZoom(18)
+        
+        // 添加标记点
+        this.updateMarkers()
+        this.initMapCalled = true
+      } catch (error) {
+        console.error('Error initializing map:', error)
+      }
     },
     
     // 更新地图上的标记点
     updateMarkers() {
+      console.log('updateMarkers called, mapInstance:', this.mapInstance)
       if (!this.mapInstance) return
       
       // 清除现有的标记点
@@ -276,6 +315,7 @@ export default {
       })
       this.markers = []
       
+      console.log('Adding markers for doctors:', this.filteredDoctors)
       // 添加新的标记点
       this.filteredDoctors.forEach(doctor => {
         const point = new window.BMapGL.Point(doctor.lng, doctor.lat)
@@ -283,6 +323,7 @@ export default {
         
         // 添加点击事件
         marker.addEventListener('click', () => {
+          console.log('Marker clicked:', doctor)
           this.selectDoctor(doctor)
         })
         
@@ -301,8 +342,8 @@ export default {
         address: '',
         specialize: '',
         introduction: '',
-        lng: 116.404,
-        lat: 39.915
+        lng: 104.065850,
+        lat: 30.657361
       }
       this.isAdd = true
       this.dialogVisible = true
@@ -333,16 +374,8 @@ export default {
         this.$message.error('请输入医生姓名')
         return
       }
-      if (!this.form.clinicName.trim()) {
-        this.$message.error('请输入诊所名称')
-        return
-      }
       if (!this.form.address.trim()) {
         this.$message.error('请输入诊所地址')
-        return
-      }
-      if (!this.form.specialize.trim()) {
-        this.$message.error('请输入医生擅长领域')
         return
       }
       
@@ -384,6 +417,20 @@ export default {
     },
     
     // 删除医生
+    handleTabChange(tab) {
+      console.log('Tab changed to:', tab)
+      if (tab === 'map') {
+        // 当切换到地图视图时，等待下一帧确保容器已渲染
+        console.log('Switching to map view, preparing to initialize map...')
+        this.$nextTick(() => {
+          console.log('Next tick, mapContainer:', this.$refs.mapContainer)
+          // 重新初始化地图，确保容器引用正确
+          this.mapInstance = null
+          this.loadBaiduMapScript()
+        })
+      }
+    },
+    
     handleDeleteDoctor(row) {
       this.$confirm('确定要删除该医生吗？', '删除确认', {
         confirmButtonText: '确定',
@@ -458,14 +505,13 @@ export default {
 /* 地图视图 */
 .map-wrapper {
   display: flex;
-  gap: 20px;
   height: calc(100vh - 200px);
   overflow: hidden;
 }
 
 /* 地图容器样式 */
 .map-container {
-  flex: 1;
+  width: 100%;
   height: 100%;
   border: 1px solid #e4e7ed;
   border-radius: 4px;
@@ -473,7 +519,7 @@ export default {
 
 /* 信息窗口样式 */
 .info-window-content {
-  width: 200px;
+  width: 300px;
 }
 
 .info-window-content h4 {

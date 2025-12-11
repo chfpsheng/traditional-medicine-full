@@ -52,19 +52,24 @@
       <div class="content">
         <!-- 搜索栏 -->
         <div class="search-section">
-          <el-input 
-            v-model="searchKeyword" 
-            placeholder="搜索方剂名称、病症或内容" 
-            class="search-input"
-            clearable
-            @keyup.enter="handleSearch"
-          >
-          </el-input>
-          <el-select v-model="searchForm.type" placeholder="按类型筛选" clearable>
-            <el-option label="偏方" value="偏方"></el-option>
-            <el-option label="验方" value="验方"></el-option>
-          </el-select>
-          <el-button @click="handleReset"><el-icon><Refresh /></el-icon></el-button>
+          <div class="search-left">
+            <el-button type="primary" @click="handleAddPrescription"><el-icon><Plus /></el-icon> 新增方剂</el-button>
+          </div>
+          <div class="search-right">
+            <el-input 
+              v-model="searchKeyword" 
+              placeholder="搜索方剂名称、病症或内容" 
+              class="search-input"
+              clearable
+              @keyup.enter="handleSearch"
+            >
+            </el-input>
+            <el-select v-model="searchForm.type" placeholder="按类型筛选" clearable>
+              <el-option label="偏方" value="偏方"></el-option>
+              <el-option label="验方" value="验方"></el-option>
+            </el-select>
+            <el-button @click="handleReset"><el-icon><Refresh /></el-icon></el-button>
+          </div>
         </div>
         
         <!-- 方剂列表 -->
@@ -107,7 +112,7 @@
       </div>
     </div>
     
-    <!-- 添加/编辑对话框 -->
+    <!-- 添加/编辑分类对话框 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
@@ -122,6 +127,73 @@
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
           <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    
+    <!-- 添加/编辑方剂对话框 -->
+    <el-dialog
+      v-model="prescriptionDialogVisible"
+      :title="prescriptionDialogTitle"
+      width="50%"
+    >
+      <el-form :model="prescriptionForm" label-width="100px">
+        <el-form-item label="类型" required>
+          <el-radio-group v-model="prescriptionForm.type">
+            <el-radio label="验方">验方</el-radio>
+            <el-radio label="偏方">偏方</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="一级分类" required>
+          <el-select v-model="prescriptionForm.category" placeholder="请选择一级分类">
+            <el-option 
+              v-for="category in categories" 
+              :key="category.id" 
+              :label="category.label" 
+              :value="category.label"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="二级分类" required>
+          <el-select v-model="prescriptionForm.subCategory" placeholder="请选择二级分类">
+            <template v-for="category in categories" :key="category.id">
+              <el-option 
+                v-for="subCategory in category.children" 
+                :key="subCategory.id" 
+                :label="subCategory.label" 
+                :value="subCategory.label"
+                v-if="prescriptionForm.category === category.label"
+              ></el-option>
+            </template>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="方剂内容" required>
+          <el-input 
+            v-model="prescriptionForm.content" 
+            placeholder="请输入方剂内容" 
+            type="textarea" 
+            :rows="4"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="作者">
+          <el-input v-model="prescriptionForm.author" placeholder="请输入作者"></el-input>
+        </el-form-item>
+        <el-form-item label="注意事项">
+          <el-input 
+            v-model="prescriptionForm.notes" 
+            placeholder="请输入注意事项" 
+            type="textarea" 
+            :rows="3"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="来源">
+          <el-input v-model="prescriptionForm.source" placeholder="请输入方剂来源"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="prescriptionDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handlePrescriptionDialogConfirm">确定</el-button>
         </span>
       </template>
     </el-dialog>
@@ -158,6 +230,7 @@ export default {
         label: 'label',
         id: 'id'
       },
+      // 分类对话框
       dialogVisible: false,
       dialogTitle: '',
       form: {
@@ -171,7 +244,21 @@ export default {
       selectedNode: null,
       selectedNodeData: null,
       currentNodeKey: null,
-      currentOperationsNode: null
+      currentOperationsNode: null,
+      // 方剂对话框
+      prescriptionDialogVisible: false,
+      prescriptionDialogTitle: '',
+      prescriptionForm: {
+        id: '',
+        type: '验方',
+        category: '',
+        subCategory: '',
+        content: '',
+        author: '',
+        notes: '',
+        source: ''
+      },
+      isPrescriptionAdd: false
     }
   },
   created() {
@@ -388,8 +475,79 @@ export default {
     
     // 编辑方剂
     handleEditPrescription(row) {
-      this.$message.info('编辑方剂功能开发中')
-      // 这里可以添加编辑方剂的逻辑，例如打开编辑对话框
+      this.prescriptionDialogTitle = '编辑方剂'
+      this.prescriptionForm = {
+        id: row.id,
+        type: row.type,
+        category: row.category,
+        subCategory: row.subCategory,
+        content: row.content,
+        author: row.author,
+        notes: row.notes,
+        source: row.source
+      }
+      this.isPrescriptionAdd = false
+      this.prescriptionDialogVisible = true
+    },
+    
+    // 新增方剂
+    handleAddPrescription() {
+      this.prescriptionDialogTitle = '新增方剂'
+      this.prescriptionForm = {
+        id: '',
+        type: '验方',
+        category: '',
+        subCategory: '',
+        content: '',
+        author: '',
+        notes: '',
+        source: ''
+      }
+      this.isPrescriptionAdd = true
+      this.prescriptionDialogVisible = true
+    },
+    
+    // 方剂对话框确定按钮
+    handlePrescriptionDialogConfirm() {
+      // 表单验证
+      if (!this.prescriptionForm.type) {
+        this.$message.error('请选择方剂类型')
+        return
+      }
+      if (!this.prescriptionForm.category) {
+        this.$message.error('请选择一级分类')
+        return
+      }
+      if (!this.prescriptionForm.subCategory) {
+        this.$message.error('请选择二级分类')
+        return
+      }
+      if (!this.prescriptionForm.content.trim()) {
+        this.$message.error('请输入方剂内容')
+        return
+      }
+      
+      if (this.isPrescriptionAdd) {
+        // 新增操作
+        request.post('/prescriptions', this.prescriptionForm).then(res => {
+          this.$message.success('新增成功')
+          this.prescriptionDialogVisible = false
+          // 重新加载方剂数据
+          this.loadPrescriptions()
+        }).catch(err => {
+          this.$message.error(err.message || '新增失败，请稍后重试')
+        })
+      } else {
+        // 编辑操作
+        request.put(`/prescriptions/${this.prescriptionForm.id}`, this.prescriptionForm).then(res => {
+          this.$message.success('编辑成功')
+          this.prescriptionDialogVisible = false
+          // 重新加载方剂数据
+          this.loadPrescriptions()
+        }).catch(err => {
+          this.$message.error(err.message || '编辑失败，请稍后重试')
+        })
+      }
     },
     
     // 删除方剂
@@ -570,11 +728,19 @@ export default {
   gap: 10px;
   align-items: center;
   margin-bottom: 20px;
+  justify-content: space-between;
+}
+
+.search-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .search-input {
   flex: 1;
-  min-width: 300px;
+  min-width: 200px;
+  max-width: 400px;
 }
 
 :deep(.el-select) {

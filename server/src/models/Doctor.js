@@ -8,7 +8,7 @@ const DoctorSchema = new mongoose.Schema(
     },
     clinicName: {
       type: String,
-      required: true
+      required: false
     },
     address: {
       type: String,
@@ -16,7 +16,7 @@ const DoctorSchema = new mongoose.Schema(
     },
     specialize: {
       type: String,
-      required: true
+      required: false
     },
     introduction: {
       type: String,
