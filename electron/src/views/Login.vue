@@ -46,7 +46,10 @@ export default {
           request.post('/login', this.loginForm).then(res => {
             if (res.code === 200) {
               localStorage.setItem('token', res.data.token)
-              this.$router.push('/prescriptions')
+              this.$router.push('/').catch(err => {
+                console.error('路由跳转失败:', err)
+                this.$message.error('登录成功，但跳转失败，请刷新页面')
+              })
             } else {
               this.$message.error(res.message)
             }

@@ -10,11 +10,11 @@
         @select="handleMenuSelect"
       >
         <el-menu-item index="prescriptions">
-          <el-icon><Collection /></el-icon>
+       <!--   <el-icon><Collection /></el-icon>  -->
           <span>验方集</span>
         </el-menu-item>
         <el-menu-item index="doctors">
-          <el-icon><Map /></el-icon>
+         <!--  <el-icon><Map /></el-icon>  -->
           <span>验医集</span>
         </el-menu-item>
       </el-menu>
@@ -34,13 +34,12 @@
 </template>
 
 <script>
-import { Collection, Map } from '@element-plus/icons-vue'
+
 
 export default {
   name: 'Main',
   components: {
-    Collection,
-    Map
+    
   },
   data() {
     return {
@@ -71,7 +70,9 @@ export default {
       }
     },
     handleMenuSelect(key) {
-      this.$router.push(`/${key}`)
+      this.$router.push(`/${key}`).catch(err => {
+        console.error('菜单跳转失败:', err)
+      })
     },
     handleLogout() {
       localStorage.removeItem('token')

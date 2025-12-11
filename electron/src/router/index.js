@@ -2,26 +2,25 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
-    path: '/',
-    redirect: '/prescriptions'
-  },
-  {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue')
   },
   {
-    path: '/main',
-    name: 'Main',
+    path: '/',
     component: () => import('../views/Main.vue'),
     children: [
       {
-        path: '/prescriptions',
+        path: '',
+        component: () => import('../views/Prescriptions.vue')
+      },
+      {
+        path: 'prescriptions',
         name: 'Prescriptions',
         component: () => import('../views/Prescriptions.vue')
       },
       {
-        path: '/doctors',
+        path: 'doctors',
         name: 'Doctors',
         component: () => import('../views/Doctors.vue')
       }
