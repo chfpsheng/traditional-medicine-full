@@ -1,8 +1,5 @@
 <template>
   <div class="prescriptions-container">
-    <!-- 公共顶部导航栏 -->
-    <Header />
-    
     <!-- 主要内容区域 -->
     <div class="main-content">
       <!-- 左侧分类树 -->
@@ -88,7 +85,6 @@
 <script>
 import request from '../utils/request'
 import { Edit, Delete, Plus, User, Search, Refresh } from '@element-plus/icons-vue'
-import Header from '../components/Header.vue'
 
 export default {
   name: 'Prescriptions',
@@ -98,8 +94,7 @@ export default {
     Plus,
     User,
     Search,
-    Refresh,
-    Header
+    Refresh
   },
   data() {
     return {

@@ -1,8 +1,5 @@
 <template>
   <div class="prescriptions-container">
-    <!-- 公共顶部导航栏 -->
-    <Header />
-    
     <!-- 主要内容区域 -->
     <div class="main-content">
       <!-- 内容区 -->
@@ -74,14 +71,12 @@
 <script>
 import request from '../utils/request'
 import { User, Refresh } from '@element-plus/icons-vue'
-import Header from '../components/Header.vue'
 
 export default {
   name: 'Doctors',
   components: {
     User,
-    Refresh,
-    Header
+    Refresh
   },
   data() {
     return {
@@ -142,9 +137,6 @@ export default {
 /* 全局容器 */
 .prescriptions-container {
   width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
   background-color: #f5f7fa;
 }
 
@@ -152,53 +144,15 @@ export default {
 
 /* 主要内容区域 */
 .main-content {
-  display: flex;
-  flex: 1;
+  padding: 20px;
   overflow: hidden;
 }
 
-/* 左侧分类树 */
-.sidebar {
-  width: 180px;
-  background-color: #fff;
-  border-right: 1px solid #e4e7ed;
-  overflow-y: auto;
-  padding: 20px 0;
-}
-
-.sidebar-title {
-  margin: 0 20px 15px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #303133;
-}
-
-/* 树节点样式 */
-:deep(.el-tree) {
-  background-color: transparent;
-}
-
-:deep(.el-tree-node__content) {
-  padding: 6px 20px;
-}
-
-:deep(.el-tree-node__label) {
-  font-size: 14px;
-  color: #606266;
-}
-
-:deep(.el-tree-node.is-current > .el-tree-node__content) {
-  background-color: #ecf5ff;
-  color: #409EFF;
-}
-
-:deep(.el-tree-node.is-current > .el-tree-node__content .el-tree-node__label) {
-  color: #409EFF;
-}
-
-/* 右侧内容区 */
+/* 内容区 */
 .content {
-  flex: 1;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
   padding: 20px;
   overflow-y: auto;
 }
