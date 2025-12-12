@@ -280,8 +280,10 @@ export default {
         const res = await request.get('/prescriptions')
         this.prescriptions = res.data
         this.allPrescriptions = res.data
+        return Promise.resolve()
       } catch (error) {
         this.$message.error('加载方子失败')
+        return Promise.reject(error)
       }
     },
     
@@ -496,8 +498,8 @@ export default {
       this.prescriptionForm = {
         id: '',
         type: '验方',
-        category: '',
-        subCategory: '',
+        category: this.currentCategory || '',
+        subCategory: this.currentSubCategory || '',
         content: '',
         author: '',
         notes: '',
@@ -533,7 +535,10 @@ export default {
           this.$message.success('新增成功')
           this.prescriptionDialogVisible = false
           // 重新加载方剂数据
-          this.loadPrescriptions()
+          this.loadPrescriptions().then(() => {
+            // 保持当前筛选状态
+            this.filterPrescriptions()
+          })
         }).catch(err => {
           this.$message.error(err.message || '新增失败，请稍后重试')
         })
@@ -543,7 +548,10 @@ export default {
           this.$message.success('编辑成功')
           this.prescriptionDialogVisible = false
           // 重新加载方剂数据
-          this.loadPrescriptions()
+          this.loadPrescriptions().then(() => {
+            // 保持当前筛选状态
+            this.filterPrescriptions()
+          })
         }).catch(err => {
           this.$message.error(err.message || '编辑失败，请稍后重试')
         })

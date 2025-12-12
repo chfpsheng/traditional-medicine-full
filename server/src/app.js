@@ -223,8 +223,8 @@ app.get('/api/prescriptions', async (req, res) => {
     const prescriptions = await Prescription.find(query);
     res.json({ code: 200, message: 'success', data: prescriptions });
   } catch (error) {
-    console.error('获取验方列表失败:', error);
-    res.status(500).json({ code: 500, message: '获取验方列表失败，请稍后重试' });
+    console.error('获取验方列表失败:', error.stack);
+    res.status(500).json({ code: 500, message: `获取验方列表失败: ${error.message}` });
   }
 });
 
@@ -248,8 +248,8 @@ app.post('/api/prescriptions', async (req, res) => {
     const savedPrescription = await newPrescription.save();
     res.json({ code: 200, message: '方剂添加成功', data: savedPrescription });
   } catch (error) {
-    console.error('添加方剂失败:', error);
-    res.status(500).json({ code: 500, message: '添加方剂失败，请稍后重试' });
+    console.error('添加方剂失败:', error.stack);
+    res.status(500).json({ code: 500, message: `添加方剂失败: ${error.message}` });
   }
 });
 
@@ -258,6 +258,11 @@ app.put('/api/prescriptions/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { type, category, subCategory, content, author = '', notes = '', source = '' } = req.body;
+    
+    // 验证id格式是否有效
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ code: 400, message: '无效的方剂ID' });
+    }
     
     // 查找并更新方剂数据
     const updatedPrescription = await Prescription.findByIdAndUpdate(
@@ -272,8 +277,8 @@ app.put('/api/prescriptions/:id', async (req, res) => {
     
     res.json({ code: 200, message: '方剂更新成功', data: updatedPrescription });
   } catch (error) {
-    console.error('更新方剂失败:', error);
-    res.status(500).json({ code: 500, message: '更新方剂失败，请稍后重试' });
+    console.error('更新方剂失败:', error.stack);
+    res.status(500).json({ code: 500, message: `更新方剂失败: ${error.message}` });
   }
 });
 
@@ -281,6 +286,11 @@ app.put('/api/prescriptions/:id', async (req, res) => {
 app.delete('/api/prescriptions/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // 验证id格式是否有效
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ code: 400, message: '无效的方剂ID' });
+    }
     
     // 查找并删除方剂数据
     const deletedPrescription = await Prescription.findByIdAndDelete(id);
@@ -291,8 +301,8 @@ app.delete('/api/prescriptions/:id', async (req, res) => {
     
     res.json({ code: 200, message: '方剂删除成功', data: deletedPrescription });
   } catch (error) {
-    console.error('删除方剂失败:', error);
-    res.status(500).json({ code: 500, message: '删除方剂失败，请稍后重试' });
+    console.error('删除方剂失败:', error.stack);
+    res.status(500).json({ code: 500, message: `删除方剂失败: ${error.message}` });
   }
 });
 
