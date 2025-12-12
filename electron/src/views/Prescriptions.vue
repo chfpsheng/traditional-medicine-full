@@ -81,8 +81,7 @@
                 <el-tag :type="scope.row.type === '验方' ? 'success' : 'info'" size="small">{{ scope.row.type }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="subCategory" label="病症" width="120"></el-table-column>
-            <el-table-column prop="category" label="方剂名称" width="180"></el-table-column>
+          
             <el-table-column prop="content" label="内容摘要" min-width="300">
               <template #default="scope">
                 <div class="content-summary">{{ scope.row.content }}</div>
