@@ -84,13 +84,13 @@
           
             <el-table-column prop="content" label="内容摘要" min-width="300">
               <template #default="scope">
-                <div class="content-summary">{{ scope.row.content }}</div>
+                <div class="content-summary" v-html="scope.row.content"></div>
               </template>
             </el-table-column>
             <el-table-column prop="author" label="作者" width="120"></el-table-column>
             <el-table-column prop="notes" label="注意事项" min-width="200">
               <template #default="scope">
-                <div class="content-summary">{{ scope.row.notes }}</div>
+                <div class="content-summary" v-html="scope.row.notes"></div>
               </template>
             </el-table-column>
             <el-table-column prop="source" label="来源" width="120"></el-table-column>
@@ -597,8 +597,8 @@ export default {
       // 配置工具栏
       editor.config.menus = [
         'bold', 'italic', 'underline', 'strikeThrough',
-        'fontSize', 'fontFamily', 'fontName', 'color', 'bgColor',
-        'head', 'link', 'img',
+        'fontSize', 'fontFamily', 'color', 'bgColor',
+        'head', 'link', 'image',
         'list', 'justify', 'quote', 'emoticon',
         'undo', 'redo'
       ]
