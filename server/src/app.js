@@ -16,7 +16,9 @@ const SECRET_KEY = 'your-secret-key';
 
 // 中间件
 app.use(cors());
-app.use(bodyParser.json());
+// 增加请求大小限制，解决PayloadTooLargeError
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // 连接数据库
 connectDB();
