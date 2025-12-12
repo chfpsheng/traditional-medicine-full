@@ -12,6 +12,7 @@
           :highlight-current="true"
           node-key="id"
           :expand-on-click-node="false"
+          :default-expand-all="true"
         >
           <template #default="{ node, data }">
             <span class="tree-node-label" @click="toggleOperations(node, data)">
@@ -94,6 +95,17 @@
               </template>
             </el-table-column>
             <el-table-column prop="source" label="来源" width="120"></el-table-column>
+            <el-table-column prop="link" label="链接" width="150">
+              <template #default="scope">
+                <el-link v-if="scope.row.link" type="primary" :href="scope.row.link" target="_blank">{{ scope.row.link }}</el-link>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="treatmentMethod" label="治法" width="100">
+              <template #default="scope">
+                <el-tag size="small">{{ scope.row.treatmentMethod || '-' }}</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="120" fixed="right">
               <template #default="scope">
                 <el-button type="text" size="small" @click="handleViewPrescription(scope.row)" title="查看详情">
@@ -207,6 +219,19 @@
         <el-form-item label="来源">
           <el-input v-model="prescriptionForm.source" placeholder="请输入方剂来源"></el-input>
         </el-form-item>
+        <el-form-item label="链接">
+          <el-input v-model="prescriptionForm.link" placeholder="请输入方剂链接"></el-input>
+        </el-form-item>
+        <el-form-item label="治法" required>
+          <el-select v-model="prescriptionForm.treatmentMethod" placeholder="请选择治法">
+            <el-option label="方剂" value="方剂"></el-option>
+            <el-option label="针" value="针"></el-option>
+            <el-option label="艾灸" value="艾灸"></el-option>
+            <el-option label="推拿" value="推拿"></el-option>
+            <el-option label="丸剂" value="丸剂"></el-option>
+            <el-option label="散剂" value="散剂"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -274,7 +299,9 @@ export default {
         content: '',
         author: '',
         notes: '',
-        source: ''
+        source: '',
+        link: '',
+        treatmentMethod: ''
       },
       isPrescriptionAdd: false,
       // 分页参数
@@ -529,7 +556,9 @@ export default {
         content: row.content,
         author: row.author,
         notes: row.notes,
-        source: row.source
+        source: row.source,
+        link: row.link || '',
+        treatmentMethod: row.treatmentMethod || ''
       }
       this.isPrescriptionAdd = false
       this.prescriptionDialogVisible = true
@@ -546,7 +575,9 @@ export default {
         content: '',
         author: '',
         notes: '',
-        source: ''
+        source: '',
+        link: '',
+        treatmentMethod: ''
       }
       this.isPrescriptionAdd = true
       this.prescriptionDialogVisible = true
@@ -569,6 +600,10 @@ export default {
       }
       if (!this.prescriptionForm.content.trim()) {
         this.$message.error('请输入方剂内容')
+        return
+      }
+      if (!this.prescriptionForm.treatmentMethod) {
+        this.$message.error('请选择治法')
         return
       }
       

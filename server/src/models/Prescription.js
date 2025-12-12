@@ -31,6 +31,15 @@ const PrescriptionSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  link: {
+    type: String,
+    default: ''
+  },
+  treatmentMethod: {
+    type: String,
+    required: true,
+    enum: ['方剂', '针', '艾灸', '推拿', '丸剂', '散剂']
+  },
   createdAt: {
     type: Date,
     default: Date.now

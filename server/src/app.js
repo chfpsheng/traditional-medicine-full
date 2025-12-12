@@ -75,53 +75,63 @@ const initData = async () => {
     const prescriptionCount = await Prescription.countDocuments();
     if (prescriptionCount === 0) {
       // 创建初始验方数据
-      const prescriptions = [
-        {
-          type: '验方',
-          category: '内科',
-          subCategory: '感冒',
-          content: '生姜10g，葱白3段，红糖适量，水煎服',
-          author: '张仲景',
-          notes: '适用于风寒感冒',
-          source: '《伤寒论》'
-        },
-        {
-          type: '偏方',
-          category: '内科',
-          subCategory: '咳嗽',
-          content: '冰糖炖雪梨',
-          author: '民间',
-          notes: '适用于肺热咳嗽',
-          source: '民间流传'
-        },
-        {
-          type: '验方',
-          category: '外科',
-          subCategory: '烫伤',
-          content: '芦荟汁涂抹患处',
-          author: '李时珍',
-          notes: '轻度烫伤适用',
-          source: '《本草纲目》'
-        },
-        {
-          type: '验方',
-          category: '妇科',
-          subCategory: '痛经',
-          content: '当归10g，川芎5g，白芍10g，熟地15g',
-          author: '张仲景',
-          notes: '适用于气血不足型痛经',
-          source: '《金匮要略》'
-        },
-        {
-          type: '偏方',
-          category: '儿科',
-          subCategory: '积食',
-          content: '山楂30g，神曲15g，麦芽15g',
-          author: '民间',
-          notes: '适用于小儿积食',
-          source: '民间流传'
-        }
-      ];
+        const prescriptions = [
+          {
+            type: '验方',
+            category: '内科',
+            subCategory: '感冒',
+            content: '生姜10g，葱白3段，红糖适量，水煎服',
+            author: '张仲景',
+            notes: '适用于风寒感冒',
+            source: '《伤寒论》',
+            link: '',
+            treatmentMethod: '方剂'
+          },
+          {
+            type: '偏方',
+            category: '内科',
+            subCategory: '咳嗽',
+            content: '冰糖炖雪梨',
+            author: '民间',
+            notes: '适用于肺热咳嗽',
+            source: '民间流传',
+            link: '',
+            treatmentMethod: '方剂'
+          },
+          {
+            type: '验方',
+            category: '外科',
+            subCategory: '烫伤',
+            content: '芦荟汁涂抹患处',
+            author: '李时珍',
+            notes: '轻度烫伤适用',
+            source: '《本草纲目》',
+            link: '',
+            treatmentMethod: '方剂'
+          },
+          {
+            type: '验方',
+            category: '妇科',
+            subCategory: '痛经',
+            content: '当归10g，川芎5g，白芍10g，熟地15g',
+            author: '张仲景',
+            notes: '适用于气血不足型痛经',
+            source: '《金匮要略》',
+            link: '',
+            treatmentMethod: '方剂'
+          },
+          {
+            type: '偏方',
+            category: '儿科',
+            subCategory: '积食',
+            content: '山楂30g，神曲15g，麦芽15g',
+            author: '民间',
+            notes: '适用于小儿积食',
+            source: '民间流传',
+            link: '',
+            treatmentMethod: '方剂'
+          }
+        ];
       await Prescription.insertMany(prescriptions);
       console.log('初始验方数据已创建');
     }
@@ -231,7 +241,7 @@ app.get('/api/prescriptions', async (req, res) => {
 // 添加方剂
 app.post('/api/prescriptions', async (req, res) => {
   try {
-    const { type, category, subCategory, content, author = '', notes = '', source = '' } = req.body;
+    const { type, category, subCategory, content, author = '', notes = '', source = '', link = '', treatmentMethod } = req.body;
     
     // 创建方剂实例
     const newPrescription = new Prescription({
@@ -241,7 +251,9 @@ app.post('/api/prescriptions', async (req, res) => {
       content,
       author,
       notes,
-      source
+      source,
+      link,
+      treatmentMethod
     });
     
     // 保存方剂数据
@@ -257,7 +269,7 @@ app.post('/api/prescriptions', async (req, res) => {
 app.put('/api/prescriptions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, category, subCategory, content, author = '', notes = '', source = '' } = req.body;
+    const { type, category, subCategory, content, author = '', notes = '', source = '', link = '', treatmentMethod } = req.body;
     
     // 验证id格式是否有效
     if (!id.match(/^[0-9a-fA-F]{24}$/)) {
@@ -267,7 +279,7 @@ app.put('/api/prescriptions/:id', async (req, res) => {
     // 查找并更新方剂数据
     const updatedPrescription = await Prescription.findByIdAndUpdate(
       id,
-      { type, category, subCategory, content, author, notes, source },
+      { type, category, subCategory, content, author, notes, source, link, treatmentMethod },
       { new: true, runValidators: true }
     );
     
