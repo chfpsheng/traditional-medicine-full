@@ -197,12 +197,11 @@
           </el-select>
         </el-form-item>
         <el-form-item label="方剂内容" required>
-          <el-input 
-            v-model="prescriptionForm.content" 
-            placeholder="请输入方剂内容" 
-            type="textarea" 
-            :rows="4"
-          ></el-input>
+          <div style="width: 100%; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;">
+            <!-- 先创建工具栏容器，再创建编辑器容器 -->
+            <div id="toolbar-container" style="border-bottom: 1px solid #ccc;"></div>
+            <div id="editor-container" style="height: 300px; overflow-y: auto;"></div>
+          </div>
         </el-form-item>
         <el-form-item label="作者">
           <el-input v-model="prescriptionForm.author" placeholder="请输入作者"></el-input>
@@ -234,7 +233,7 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="prescriptionDialogVisible = false">取消</el-button>
+          <el-button @click="handleCancel">取消</el-button>
           <el-button type="primary" @click="handlePrescriptionDialogConfirm">确定</el-button>
         </span>
       </template>
@@ -245,6 +244,8 @@
 <script>
 import request from '../utils/request'
 import { Edit, Delete, Plus, User, Search, Refresh } from '@element-plus/icons-vue'
+import WangEditor from 'wangeditor'
+import '@wangeditor/editor/dist/css/style.css'
 
 export default {
   name: 'Prescriptions',
@@ -303,6 +304,10 @@ export default {
         treatmentMethod: ''
       },
       isPrescriptionAdd: false,
+      // 富文本编辑器配置
+      editor: null,
+      toolbar: null,
+      editorContent: '',
       // 分页参数
       pagination: {
         currentPage: 1,
@@ -315,6 +320,12 @@ export default {
     this.loadCategories()
     this.loadPrescriptions()
   },
+  // 组件生命周期钩子
+  beforeUnmount() {
+    // 组件销毁时销毁编辑器
+    this.destroyEditor()
+  },
+  
   methods: {
     async loadCategories() {
       try {
@@ -559,8 +570,60 @@ export default {
         link: row.link || '',
         treatmentMethod: row.treatmentMethod || ''
       }
+      // 将内容加载到编辑器
+      this.editorContent = row.content || ''
       this.isPrescriptionAdd = false
       this.prescriptionDialogVisible = true
+      // 延迟初始化编辑器，确保DOM已渲染
+      this.$nextTick(() => {
+        this.initEditor()
+      })
+    },
+    
+    // 初始化富文本编辑器
+    initEditor() {
+      // 销毁旧实例（如果存在）
+      this.destroyEditor()
+      
+      // 创建编辑器实例
+      const editor = new WangEditor('#toolbar-container', '#editor-container')
+      
+      // 配置编辑器
+      editor.config.placeholder = '请输入方剂内容...'
+      
+      // 配置图片上传
+      editor.config.uploadImgShowBase64 = true // 支持 base64 格式上传
+      
+      // 配置工具栏
+      editor.config.menus = [
+        'bold', 'italic', 'underline', 'strikeThrough',
+        'fontSize', 'fontFamily', 'fontName', 'color', 'bgColor',
+        'head', 'link', 'img',
+        'list', 'justify', 'quote', 'emoticon',
+        'undo', 'redo'
+      ]
+      
+      // 监听内容变化
+      editor.config.onchange = (html) => {
+        this.editorContent = html
+      }
+      
+      // 初始化编辑器
+      editor.create()
+      
+      // 设置初始内容
+      editor.txt.html(this.editorContent)
+      
+      // 保存实例
+      this.editor = editor
+    },
+    
+    // 销毁编辑器
+    destroyEditor() {
+      if (this.editor && this.editor.destroy) {
+        this.editor.destroy()
+        this.editor = null
+      }
     },
     
     // 新增方剂
@@ -578,12 +641,21 @@ export default {
         link: '',
         treatmentMethod: ''
       }
+      // 重置编辑器内容
+      this.editorContent = ''
       this.isPrescriptionAdd = true
       this.prescriptionDialogVisible = true
+      // 延迟初始化编辑器，确保DOM已渲染
+      this.$nextTick(() => {
+        this.initEditor()
+      })
     },
     
     // 方剂对话框确定按钮
     handlePrescriptionDialogConfirm() {
+      // 将编辑器内容同步到表单
+      this.prescriptionForm.content = this.editorContent
+      
       // 表单验证
       if (!this.prescriptionForm.type) {
         this.$message.error('请选择方剂类型')
@@ -597,7 +669,7 @@ export default {
         this.$message.error('请选择二级分类')
         return
       }
-      if (!this.prescriptionForm.content.trim()) {
+      if (!this.editorContent.trim()) {
         this.$message.error('请输入方剂内容')
         return
       }
@@ -611,6 +683,8 @@ export default {
         request.post('/prescriptions', this.prescriptionForm).then(res => {
           this.$message.success('新增成功')
           this.prescriptionDialogVisible = false
+          // 销毁编辑器
+          this.destroyEditor()
           // 重新加载方剂数据
           this.loadPrescriptions().then(() => {
             // 保持当前筛选状态
@@ -624,6 +698,8 @@ export default {
         request.put(`/prescriptions/${this.prescriptionForm.id}`, this.prescriptionForm).then(res => {
           this.$message.success('编辑成功')
           this.prescriptionDialogVisible = false
+          // 销毁编辑器
+          this.destroyEditor()
           // 重新加载方剂数据
           this.loadPrescriptions().then(() => {
             // 保持当前筛选状态
@@ -633,6 +709,13 @@ export default {
           this.$message.error(err.message || '编辑失败，请稍后重试')
         })
       }
+    },
+    
+    // 取消按钮处理
+    handleCancel() {
+      this.prescriptionDialogVisible = false
+      // 销毁编辑器
+      this.destroyEditor()
     },
     
     // 删除方剂
