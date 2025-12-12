@@ -568,8 +568,10 @@ export default {
         // 调用后端删除接口
         request.delete(`/prescriptions/${row.id}`).then(res => {
           this.$message.success('删除成功')
-          // 重新加载方剂数据
-          this.loadPrescriptions()
+          // 保持当前筛选状态
+          this.loadPrescriptions().then(() => {
+            this.filterPrescriptions()
+          })
         }).catch(err => {
           this.$message.error(err.message || '删除失败，请稍后重试')
         })
