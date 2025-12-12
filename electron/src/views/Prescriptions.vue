@@ -108,6 +108,24 @@
               </template>
             </el-table-column>
           </el-table>
+          <!-- 分页组件 -->
+          <div class="pagination-container">
+            <el-pagination
+              v-model:current-page="pagination.currentPage"
+              v-model:page-size="pagination.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="pagination.total"
+              :prev-text="'上一页'"
+              :next-text="'下一页'"
+              :total-text="'共 '"
+              :page-size-text="'条/页'"
+              :jump-text="'前往'"
+              :page-text="'页'"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            ></el-pagination>
+          </div>
         </div>
       </div>
     </div>
@@ -258,7 +276,13 @@ export default {
         notes: '',
         source: ''
       },
-      isPrescriptionAdd: false
+      isPrescriptionAdd: false,
+      // 分页参数
+      pagination: {
+        currentPage: 1,
+        pageSize: 10,
+        total: 0
+      }
     }
   },
   created() {
@@ -360,7 +384,26 @@ export default {
         filtered = filtered.filter(item => item.subCategory === this.currentSubCategory)
       }
       
-      this.prescriptions = filtered
+      // 更新总条数
+      this.pagination.total = filtered.length
+      
+      // 分页处理
+      const startIndex = (this.pagination.currentPage - 1) * this.pagination.pageSize
+      const endIndex = startIndex + this.pagination.pageSize
+      this.prescriptions = filtered.slice(startIndex, endIndex)
+    },
+    
+    // 分页大小改变时触发
+    handleSizeChange(newSize) {
+      this.pagination.pageSize = newSize
+      this.pagination.currentPage = 1
+      this.filterPrescriptions()
+    },
+    
+    // 当前页码改变时触发
+    handleCurrentChange(newPage) {
+      this.pagination.currentPage = newPage
+      this.filterPrescriptions()
     },
 
     // 添加根分类
@@ -792,5 +835,19 @@ export default {
   font-size: 14px;
   color: #606266;
   line-height: 1.5;
+}
+
+/* 分页容器样式 */
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding: 10px 0;
+  border-top: 1px solid #e4e7ed;
+}
+
+/* 确保分页组件的中文显示正常 */
+:deep(.el-pagination) {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 </style>
