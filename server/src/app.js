@@ -406,8 +406,8 @@ const buildTree = (categories) => {
   
   // 先将所有分类按id存入map
   categories.forEach(category => {
-    map[category._id] = {
-      id: category._id,
+    map[category.id] = {
+      id: category.id,
       label: category.label,
       children: []
     };
@@ -417,11 +417,11 @@ const buildTree = (categories) => {
   categories.forEach(category => {
     if (category.parentId === null) {
       // 根节点
-      tree.push(map[category._id]);
+      tree.push(map[category.id]);
     } else {
       // 子节点
       if (map[category.parentId]) {
-        map[category.parentId].children.push(map[category._id]);
+        map[category.parentId].children.push(map[category.id]);
       }
     }
   });
