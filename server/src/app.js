@@ -194,28 +194,39 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   
   try {
+    console.log('登录请求:', { username, password });
+    
     // 查找用户
     const user = await User.findOne({ username });
+    console.log('找到用户:', user);
+    
     if (!user) {
+      console.log('用户不存在:', username);
       return res.status(401).json({ code: 401, message: '用户名或密码错误' });
     }
     
     // 验证密码
+    console.log('开始验证密码');
     const isMatch = await user.matchPassword(password);
+    console.log('密码验证结果:', isMatch);
+    
     if (!isMatch) {
       return res.status(401).json({ code: 401, message: '用户名或密码错误' });
     }
     
     // 生成JWT token
+    console.log('开始生成token，用户信息:', { _id: user._id, username: user.username, role: user.role });
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user._id, username: user.username, role: user.role },
       SECRET_KEY,
       { expiresIn: '1d' }
     );
+    console.log('token生成成功:', token);
     
     res.json({ code: 200, message: '登录成功', data: { token } });
   } catch (error) {
-    console.error('登录失败:', error);
+    console.error('登录失败:', error.message);
+    console.error('错误堆栈:', error.stack);
     res.status(500).json({ code: 500, message: '登录失败，请稍后重试' });
   }
 });

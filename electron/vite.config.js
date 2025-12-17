@@ -6,7 +6,7 @@ export default defineConfig({
     vue()
   ],
   server: {
-    port: 3002,
+    port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
