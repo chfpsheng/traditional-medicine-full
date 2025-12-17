@@ -8,8 +8,7 @@ const PrescriptionSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: true,
-    enum: ['内科', '外科', '妇科', '儿科']
+    required: true
   },
   subCategory: {
     type: String,
@@ -38,7 +37,7 @@ const PrescriptionSchema = new mongoose.Schema({
   treatmentMethod: {
     type: String,
     required: true,
-    enum: ['方剂', '针', '艾灸', '推拿', '丸剂', '散剂']
+    enum: ['方剂', '针', '艾灸', '推拿', '丸剂', '散剂', '熏洗']
   },
   createdAt: {
     type: Date,

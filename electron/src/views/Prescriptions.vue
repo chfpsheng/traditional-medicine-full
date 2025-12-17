@@ -4,6 +4,11 @@
     <div class="main-content">
       <!-- 左侧分类树 -->
       <div class="sidebar">
+        <div class="sidebar-header">
+          <el-button type="primary" size="small" @click="handleAddRoot">
+            <el-icon><Plus /></el-icon> 新增根节点
+          </el-button>
+        </div>
         <el-tree
           ref="tree"
           :data="categories"
@@ -84,7 +89,14 @@
           
             <el-table-column prop="content" label="内容摘要" min-width="300">
               <template #default="scope">
-                <div class="content-summary" v-html="scope.row.content"></div>
+                <div class="content-summary">
+                  <!-- 截断显示，超过20个文字显示查看详情按钮 -->
+                  <span v-if="scope.row.content.length <= 20" v-html="scope.row.content"></span>
+                  <span v-else>
+                    <span v-html="scope.row.content.substring(0, 20) + '...'"></span>
+                    <el-button type="text" size="small" @click="handleViewDetail(scope.row)">查看详情</el-button>
+                  </span>
+                </div>
               </template>
             </el-table-column>
             <el-table-column prop="author" label="作者" width="120"></el-table-column>
@@ -228,6 +240,7 @@
             <el-option label="推拿" value="推拿"></el-option>
             <el-option label="丸剂" value="丸剂"></el-option>
             <el-option label="散剂" value="散剂"></el-option>
+            <el-option label="熏洗" value="熏洗"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -235,6 +248,20 @@
         <span class="dialog-footer">
           <el-button @click="handleCancel">取消</el-button>
           <el-button type="primary" @click="handlePrescriptionDialogConfirm">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
+    
+    <!-- 详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="内容详情"
+      width="60%"
+    >
+      <div class="detail-content" v-html="currentDetail.content"></div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
         </span>
       </template>
     </el-dialog>
@@ -304,6 +331,9 @@ export default {
         treatmentMethod: ''
       },
       isPrescriptionAdd: false,
+      // 详情对话框
+      detailDialogVisible: false,
+      currentDetail: null,
       // 富文本编辑器配置
       editor: null,
       toolbar: null,
@@ -551,8 +581,14 @@ export default {
     
     // 查看方剂详情
     handleViewPrescription(row) {
-      this.$message.info('查看方剂详情功能开发中')
-      // 这里可以添加查看方剂详情的逻辑，例如打开详情对话框
+      // 直接调用查看详情方法
+      this.handleViewDetail(row)
+    },
+    
+    // 查看详情按钮事件处理
+    handleViewDetail(row) {
+      this.currentDetail = row
+      this.detailDialogVisible = true
     },
     
     // 编辑方剂
@@ -771,8 +807,16 @@ export default {
   padding: 20px 0;
 }
 
+/* 分类树头部 */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 15px;
+}
+
 .sidebar-title {
-  margin: 0 20px 15px;
+  margin: 0;
   font-size: 16px;
   font-weight: bold;
   color: #303133;
@@ -966,5 +1010,35 @@ export default {
 /* 确保分页组件的中文显示正常 */
 :deep(.el-pagination) {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 详情对话框内容样式 */
+.detail-content {
+  padding: 10px 0;
+  line-height: 1.6;
+  font-size: 14px;
+  color: #333;
+}
+
+.detail-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+}
+
+.detail-content p {
+  margin: 10px 0;
+}
+
+.detail-content strong {
+  font-weight: bold;
+}
+
+.detail-content em {
+  font-style: italic;
+}
+
+.detail-content u {
+  text-decoration: underline;
 }
 </style>
