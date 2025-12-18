@@ -10,6 +10,10 @@ const DoctorSchema = new mongoose.Schema(
       type: String,
       required: false
     },
+    region: {
+      type: String,
+      required: false
+    },
     address: {
       type: String,
       required: true
@@ -25,11 +29,11 @@ const DoctorSchema = new mongoose.Schema(
     },
     lng: {
       type: Number,
-      required: true
+      required: false
     },
     lat: {
       type: Number,
-      required: true
+      required: false
     },
     createdAt: {
       type: Date,

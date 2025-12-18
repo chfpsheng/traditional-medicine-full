@@ -34,6 +34,7 @@
                 <el-table :data="filteredDoctors" style="width: 100%">
                   <el-table-column prop="name" label="姓名" width="100"></el-table-column>
                   <el-table-column prop="clinicName" label="诊所名称" width="150"></el-table-column>
+                  <el-table-column prop="region" label="省市" width="150"></el-table-column>
                   <el-table-column prop="address" label="地址" min-width="200"></el-table-column>
                   <el-table-column prop="specialize" label="擅长" min-width="150"></el-table-column>
                   <el-table-column prop="introduction" label="简介" min-width="200" show-overflow-tooltip>
@@ -73,8 +74,17 @@
       <el-form-item label="诊所名称">
         <el-input v-model="form.clinicName" placeholder="请输入诊所名称"></el-input>
       </el-form-item>
+      <el-form-item label="省市">
+        <el-cascader
+          v-model="form.region"
+          :options="regionOptions"
+          :props="regionProps"
+          placeholder="请选择省份和城市"
+          clearable
+        ></el-cascader>
+      </el-form-item>
       <el-form-item label="地址" required>
-        <el-input v-model="form.address" placeholder="请输入诊所地址"></el-input>
+        <el-input v-model="form.address" placeholder="请输入详细地址"></el-input>
       </el-form-item>
       <el-form-item label="擅长">
         <el-input v-model="form.specialize" placeholder="请输入医生擅长领域"></el-input>
@@ -122,6 +132,81 @@ export default {
       filteredDoctors: [],
       searchKeyword: '',
       selectedDoctor: null,
+      // 省市数据（级联选择器格式）
+      regionOptions: [
+        { label: '北京市', value: '北京市', children: [{ label: '北京市', value: '北京市' }] },
+        { label: '上海市', value: '上海市', children: [{ label: '上海市', value: '上海市' }] },
+        { label: '天津市', value: '天津市', children: [{ label: '天津市', value: '天津市' }] },
+        { label: '重庆市', value: '重庆市', children: [{ label: '重庆市', value: '重庆市' }] },
+        { label: '四川省', value: '四川省', children: [
+          { label: '成都市', value: '成都市' },
+          { label: '绵阳市', value: '绵阳市' },
+          { label: '德阳市', value: '德阳市' },
+          { label: '自贡市', value: '自贡市' },
+          { label: '泸州市', value: '泸州市' },
+          { label: '内江市', value: '内江市' },
+          { label: '乐山市', value: '乐山市' },
+          { label: '南充市', value: '南充市' },
+          { label: '宜宾市', value: '宜宾市' },
+          { label: '达州市', value: '达州市' },
+          { label: '雅安市', value: '雅安市' },
+          { label: '广安市', value: '广安市' },
+          { label: '遂宁市', value: '遂宁市' },
+          { label: '眉山市', value: '眉山市' },
+          { label: '凉山彝族自治州', value: '凉山彝族自治州' },
+          { label: '甘孜藏族自治州', value: '甘孜藏族自治州' },
+          { label: '阿坝藏族羌族自治州', value: '阿坝藏族羌族自治州' },
+          { label: '攀枝花市', value: '攀枝花市' },
+          { label: '广元市', value: '广元市' },
+          { label: '巴中市', value: '巴中市' },
+          { label: '资阳市', value: '资阳市' }
+        ]},
+        { label: '广东省', value: '广东省', children: [
+          { label: '广州市', value: '广州市' },
+          { label: '深圳市', value: '深圳市' },
+          { label: '东莞市', value: '东莞市' },
+          { label: '佛山市', value: '佛山市' },
+          { label: '中山市', value: '中山市' },
+          { label: '珠海市', value: '珠海市' },
+          { label: '汕头市', value: '汕头市' },
+          { label: '惠州市', value: '惠州市' },
+          { label: '江门市', value: '江门市' },
+          { label: '湛江市', value: '湛江市' },
+          { label: '肇庆市', value: '肇庆市' },
+          { label: '茂名市', value: '茂名市' },
+          { label: '揭阳市', value: '揭阳市' },
+          { label: '清远市', value: '清远市' },
+          { label: '韶关市', value: '韶关市' },
+          { label: '阳江市', value: '阳江市' },
+          { label: '梅州市', value: '梅州市' },
+          { label: '汕尾市', value: '汕尾市' },
+          { label: '河源市', value: '河源市' },
+          { label: '潮州市', value: '潮州市' },
+          { label: '云浮市', value: '云浮市' }
+        ]},
+        { label: '江苏省', value: '江苏省', children: [
+          { label: '南京市', value: '南京市' },
+          { label: '苏州市', value: '苏州市' },
+          { label: '无锡市', value: '无锡市' },
+          { label: '常州市', value: '常州市' },
+          { label: '南通市', value: '南通市' },
+          { label: '徐州市', value: '徐州市' },
+          { label: '连云港市', value: '连云港市' },
+          { label: '淮安市', value: '淮安市' },
+          { label: '盐城市', value: '盐城市' },
+          { label: '扬州市', value: '扬州市' },
+          { label: '泰州市', value: '泰州市' },
+          { label: '宿迁市', value: '宿迁市' },
+          { label: '镇江市', value: '镇江市' }
+        ]}
+      ],
+      // 级联选择器配置
+      regionProps: {
+        label: 'label',
+        value: 'value',
+        children: 'children',
+        checkStrictly: true
+      },
       // 编辑对话框配置
       dialogVisible: false,
       dialogTitle: '',
@@ -129,6 +214,7 @@ export default {
         id: '',
         name: '',
         clinicName: '',
+        region: [], // 级联选择器的值，格式为 [省份, 城市]
         address: '',
         specialize: '',
         introduction: '',
@@ -170,7 +256,6 @@ export default {
       this.selectedDoctor = doctor
       // 显示信息窗口
       console.log('mapInstance:', this.mapInstance)
-      console.log('window.BMapGL:', window.BMapGL)
       
       // 确保地图实例和BMapGL对象都存在
       if (!this.mapInstance) {
@@ -339,6 +424,7 @@ export default {
         id: '',
         name: '',
         clinicName: '',
+        region: [],
         address: '',
         specialize: '',
         introduction: '',
@@ -351,12 +437,31 @@ export default {
     
     // 编辑医生
     handleEditDoctor(row) {
-      console.log(222222,row)
+      console.log(222222, row)
       this.dialogTitle = '编辑医生'
+      // 构建级联选择器的region值
+      const region = []
+      // 如果row.region存在，解析省份和城市
+      if (row.region) {
+        // 简单处理，假设region格式为"省份城市"
+        // 实际应用中可能需要更复杂的解析逻辑
+        const provincePattern = /^(北京市|上海市|天津市|重庆市|四川省|广东省|江苏省)/
+        const provinceMatch = row.region.match(provincePattern)
+        if (provinceMatch) {
+          region.push(provinceMatch[1])
+          // 提取城市部分
+          const city = row.region.replace(provinceMatch[1], '')
+          if (city) {
+            region.push(city)
+          }
+        }
+      }
+      
       this.form = {
         id: row.id,
         name: row.name,
         clinicName: row.clinicName,
+        region: region,
         address: row.address,
         specialize: row.specialize,
         introduction: row.introduction || '',
@@ -379,18 +484,29 @@ export default {
         return
       }
       
+      // 构建完整地址用于地理编码
+      let fullAddress = this.form.address
+      if (this.form.region && this.form.region.length > 0) {
+        fullAddress = `${this.form.region.join('')}${fullAddress}`
+      }
       
       // 使用百度地图API进行地理编码获取经纬度
       const geocoder = new window.BMapGL.Geocoder()
-      geocoder.getPoint(this.form.address, (point) => {
+      geocoder.getPoint(fullAddress, (point) => {
         if (point) {
           // 获取到经纬度，赋值给form
           this.form.lng = point.lng
           this.form.lat = point.lat
           
+          // 构建请求数据，将region数组转换为字符串
+          const requestData = {
+            ...this.form,
+            region: this.form.region.join('') // 将省份和城市合并为一个字符串，如"四川省成都市"
+          }
+          
           if (this.isAdd) {
             // 添加操作
-            request.post('/doctors', this.form).then(res => {
+            request.post('/doctors', requestData).then(res => {
               this.$message.success('添加成功')
               this.dialogVisible = false
               // 重新加载医生数据
@@ -400,7 +516,7 @@ export default {
             })
           } else {
             // 编辑操作
-            request.put(`/doctors/${this.form.id}`, this.form).then(res => {
+            request.put(`/doctors/${this.form.id}`, requestData).then(res => {
               this.$message.success('编辑成功')
               this.dialogVisible = false
               // 重新加载医生数据
