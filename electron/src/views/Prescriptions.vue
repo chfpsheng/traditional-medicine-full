@@ -108,7 +108,27 @@
             <el-table-column prop="source" label="来源" width="120"></el-table-column>
             <el-table-column prop="link" label="链接" width="150">
               <template #default="scope">
-                <el-link v-if="scope.row.link" type="primary" :href="scope.row.link" target="_blank">{{ scope.row.link }}</el-link>
+                <template v-if="scope.row.link">
+                  <!-- 检查链接是否以http或https开头 -->
+                  <el-link 
+                    v-if="scope.row.link.startsWith('http://') || scope.row.link.startsWith('https://')" 
+                    type="primary" 
+                    :href="scope.row.link" 
+                    target="_blank"
+                    @click.stop
+                  >
+                    {{ scope.row.link }}
+                  </el-link>
+                  <!-- 非http/https链接，点击复制 -->
+                  <span 
+                    v-else 
+                    class="copy-link" 
+                    @click="handleCopyLink(scope.row.link)"
+                    style="cursor: pointer; color: #409eff; text-decoration: underline;"
+                  >
+                    {{ scope.row.link }}
+                  </span>
+                </template>
                 <span v-else>-</span>
               </template>
             </el-table-column>
@@ -774,6 +794,37 @@ export default {
       }).catch(() => {
         this.$message.info('已取消删除')
       })
+    },
+    
+    // 复制链接到剪贴板
+    handleCopyLink(link) {
+      if (navigator.clipboard && window.isSecureContext) {
+        // 现代浏览器安全上下文下使用navigator.clipboard API
+        navigator.clipboard.writeText(link).then(() => {
+          this.$message.success('链接已复制到剪贴板')
+        }).catch(err => {
+          console.error('复制失败:', err)
+          this.$message.error('复制链接失败，请手动复制')
+        })
+      } else {
+        // 兼容性处理，使用传统的复制方法
+        const textArea = document.createElement('textarea')
+        textArea.value = link
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          this.$message.success('链接已复制到剪贴板')
+        } catch (err) {
+          console.error('复制失败:', err)
+          this.$message.error('复制链接失败，请手动复制')
+        }
+        document.body.removeChild(textArea)
+      }
     }
   }
 }
