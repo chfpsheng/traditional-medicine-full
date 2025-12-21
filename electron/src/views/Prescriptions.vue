@@ -389,8 +389,11 @@ export default {
     async loadPrescriptions() {
       try {
         const res = await request.get('/prescriptions')
-        this.prescriptions = res.data
         this.allPrescriptions = res.data
+        // 初始化分页信息
+        this.pagination.total = this.allPrescriptions.length
+        // 调用筛选方法进行分页处理
+        this.filterPrescriptions()
         return Promise.resolve()
       } catch (error) {
         this.$message.error('加载方子失败')
