@@ -252,8 +252,8 @@
         <el-form-item label="链接">
           <el-input v-model="prescriptionForm.link" placeholder="请输入方剂链接"></el-input>
         </el-form-item>
-        <el-form-item label="治法" required>
-          <el-select v-model="prescriptionForm.treatmentMethod" placeholder="请选择治法">
+        <el-form-item label="治法">
+          <el-select v-model="prescriptionForm.treatmentMethod" placeholder="请选择治法" clearable>
             <el-option label="方剂" value="方剂"></el-option>
             <el-option label="针" value="针"></el-option>
             <el-option label="艾灸" value="艾灸"></el-option>
@@ -732,10 +732,7 @@ export default {
         this.$message.error('请输入方剂内容')
         return
       }
-      if (!this.prescriptionForm.treatmentMethod) {
-        this.$message.error('请选择治法')
-        return
-      }
+      
       
       if (this.isPrescriptionAdd) {
         // 新增操作
