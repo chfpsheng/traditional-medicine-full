@@ -21,8 +21,14 @@
       </el-button>
     </div>
     <div class="header-actions">
-
       <el-icon class="search-icon"><Search /></el-icon>
+      <el-button 
+        type="text" 
+        @click="handleLogout"
+        class="logout-button"
+      >
+        退出登录
+      </el-button>
     </div>
   </div>
 </template>
@@ -49,6 +55,14 @@ export default {
     navigateTo(page) {
       this.$router.push(`/${page}`).catch(err => {
         console.error('导航失败:', err)
+      })
+    },
+    handleLogout() {
+      // 清除token
+      localStorage.removeItem('token')
+      // 跳转到登录页
+      this.$router.push('/login').catch(err => {
+        console.error('退出登录失败:', err)
       })
     }
   }
@@ -94,5 +108,14 @@ export default {
   font-size: 18px;
   cursor: pointer;
   color: #606266;
+}
+
+.logout-button {
+  margin-left: 10px;
+  color: #606266;
+}
+
+.logout-button:hover {
+  color: #F56C6C;
 }
 </style>

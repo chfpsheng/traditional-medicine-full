@@ -42,6 +42,7 @@
                       {{ scope.row.introduction || '暂无简介' }}
                     </template>
                   </el-table-column>
+                  <el-table-column prop="tel" label="电话" min-width="120"></el-table-column>
                   <el-table-column label="操作" width="100" fixed="right">
                     <template #default="scope">
                       <el-button type="text" size="small" @click="handleEditDoctor(scope.row)" title="编辑医生">
@@ -98,6 +99,9 @@
           :maxlength="256" 
           show-word-limit
         ></el-input>
+      </el-form-item>
+      <el-form-item label="电话">
+        <el-input v-model="form.tel" placeholder="请输入医生电话"></el-input>
       </el-form-item>
       <!-- 经纬度输入框，不显示，通过地址自动获取 -->
       <el-input v-model="form.lng" type="hidden"></el-input>
@@ -616,6 +620,7 @@ export default {
         address: '',
         specialize: '',
         introduction: '',
+        tel: '',
         lng: 0,
         lat: 0
       },
@@ -684,6 +689,7 @@ export default {
             ${doctor.clinicName ? `<p><strong>诊所名称：</strong>${doctor.clinicName}</p>` : ''}
             <p><strong>地址：</strong>${doctor.address}</p>
             ${doctor.specialize ? `<p><strong>擅长：</strong>${doctor.specialize}</p>` : ''}
+            ${doctor.tel ? `<p><strong>电话：</strong>${doctor.tel}</p>` : ''}
             ${doctor.introduction ? `<p><strong>简介：</strong>${doctor.introduction}</p>` : ''}
           </div>
         `)
@@ -826,6 +832,7 @@ export default {
         address: '',
         specialize: '',
         introduction: '',
+        tel: '',
         lng: 104.065850,
         lat: 30.657361
       }
@@ -863,6 +870,7 @@ export default {
         address: row.address,
         specialize: row.specialize,
         introduction: row.introduction || '',
+        tel: row.tel || '',
         lng: row.lng,
         lat: row.lat
       }

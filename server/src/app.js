@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
 const connectDB = require('./config/db');
 
 // 引入模型
@@ -12,7 +15,28 @@ const Category = require('./models/Category');
 
 const app = express();
 const PORT = process.env.PORT || 3006;
-const SECRET_KEY = 'your-secret-key';
+
+// 读取RSA密钥
+const privateKey = fs.readFileSync(path.join(__dirname, '../config/private.key'), 'utf8');
+const publicKey = fs.readFileSync(path.join(__dirname, '../config/public.key'), 'utf8');
+
+// JWT验证中间件
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ code: 401, message: '未提供token' });
+  }
+  
+  jwt.verify(token, publicKey, { algorithms: ['RS256'] }, (err, user) => {
+    if (err) {
+      return res.status(403).json({ code: 403, message: '无效的token' });
+    }
+    req.user = user;
+    next();
+  });
+};
 
 // 中间件
 app.use(cors());
@@ -217,12 +241,12 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ code: 401, message: '用户名或密码错误' });
     }
     
-    // 生成JWT token
+    // 生成JWT token（使用RSA私钥签名）
     console.log('开始生成token，用户信息:', { _id: user._id, username: user.username, role: user.role });
     const token = jwt.sign(
       { id: user._id, username: user.username, role: user.role },
-      SECRET_KEY,
-      { expiresIn: '1d' }
+      privateKey,
+      { expiresIn: '1d', algorithm: 'RS256' }
     );
     console.log('token生成成功:', token);
     
@@ -255,7 +279,7 @@ app.get('/api/prescriptions', async (req, res) => {
 });
 
 // 添加方剂
-app.post('/api/prescriptions', async (req, res) => {
+app.post('/api/prescriptions', authenticateToken, async (req, res) => {
   try {
     const { type, category, subCategory, content, author = '', notes = '', source = '', link = '', treatmentMethod } = req.body;
     
@@ -282,7 +306,7 @@ app.post('/api/prescriptions', async (req, res) => {
 });
 
 // 编辑方剂
-app.put('/api/prescriptions/:id', async (req, res) => {
+app.put('/api/prescriptions/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { type, category, subCategory, content, author = '', notes = '', source = '', link = '', treatmentMethod } = req.body;
@@ -311,7 +335,7 @@ app.put('/api/prescriptions/:id', async (req, res) => {
 });
 
 // 删除方剂
-app.delete('/api/prescriptions/:id', async (req, res) => {
+app.delete('/api/prescriptions/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -346,7 +370,7 @@ app.get('/api/doctors', async (req, res) => {
 });
 
 // 添加医生
-app.post('/api/doctors', async (req, res) => {
+app.post('/api/doctors', authenticateToken, async (req, res) => {
   try {
     const { name, clinicName, region, address, specialize, introduction = '', lng, lat } = req.body;
     
@@ -372,7 +396,7 @@ app.post('/api/doctors', async (req, res) => {
 });
 
 // 编辑医生
-app.put('/api/doctors/:id', async (req, res) => {
+app.put('/api/doctors/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, clinicName, region, address, specialize, introduction = '', lng, lat } = req.body;
@@ -396,7 +420,7 @@ app.put('/api/doctors/:id', async (req, res) => {
 });
 
 // 删除医生
-app.delete('/api/doctors/:id', async (req, res) => {
+app.delete('/api/doctors/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -459,7 +483,7 @@ app.get('/api/categories', async (req, res) => {
 });
 
 // 新增分类
-app.post('/api/categories', async (req, res) => {
+app.post('/api/categories', authenticateToken, async (req, res) => {
   try {
     const { parentId, label } = req.body;
     
@@ -484,7 +508,7 @@ app.post('/api/categories', async (req, res) => {
 });
 
 // 编辑分类
-app.put('/api/categories', async (req, res) => {
+app.put('/api/categories', authenticateToken, async (req, res) => {
   try {
     const { id, label } = req.body;
     
@@ -510,7 +534,7 @@ app.put('/api/categories', async (req, res) => {
 });
 
 // 删除分类
-app.delete('/api/categories/:id', async (req, res) => {
+app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     

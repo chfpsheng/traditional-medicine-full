@@ -27,6 +27,11 @@ const DoctorSchema = new mongoose.Schema(
       maxlength: 256,
       default: ''
     },
+    tel: {
+      type: String,
+      required: false,
+      default: ''
+    },
     lng: {
       type: Number,
       required: false
